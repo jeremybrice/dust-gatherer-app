@@ -67,4 +67,11 @@ interface InventoryDao {
     // Search
     @Query("SELECT * FROM inventory_items WHERE title LIKE '%' || :query || '%' OR description LIKE '%' || :query || '%' ORDER BY createdAt DESC")
     fun searchItems(query: String): Flow<List<InventoryItem>>
+
+    // Bulk operations for import/export
+    @Query("SELECT * FROM inventory_items")
+    suspend fun getAllItemsSnapshot(): List<InventoryItem>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertItems(items: List<InventoryItem>): List<Long>
 }

@@ -46,4 +46,9 @@ class InventoryRepository(private val inventoryDao: InventoryDao) {
     fun getActiveListingsCount(): Flow<Int> = inventoryDao.getActiveListingsCount()
 
     fun searchItems(query: String): Flow<List<InventoryItem>> = inventoryDao.searchItems(query)
+
+    // Bulk operations for import/export
+    suspend fun getAllItemsSnapshot(): List<InventoryItem> = inventoryDao.getAllItemsSnapshot()
+
+    suspend fun insertItems(items: List<InventoryItem>): List<Long> = inventoryDao.insertItems(items)
 }

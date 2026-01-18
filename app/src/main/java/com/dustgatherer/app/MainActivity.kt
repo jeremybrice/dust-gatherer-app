@@ -9,6 +9,8 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.dustgatherer.app.data.export.DataExporter
+import com.dustgatherer.app.data.export.DataImporter
 import com.dustgatherer.app.data.local.AppLanguage
 import com.dustgatherer.app.data.local.SettingsDataStore
 import com.dustgatherer.app.data.local.ThemeMode
@@ -16,6 +18,7 @@ import com.dustgatherer.app.data.repository.InventoryRepository
 import com.dustgatherer.app.ui.navigation.AppNavigation
 import com.dustgatherer.app.ui.theme.DustGathererTheme
 import com.dustgatherer.app.viewmodel.CalendarViewModel
+import com.dustgatherer.app.viewmodel.ImportExportViewModel
 import com.dustgatherer.app.viewmodel.InventoryViewModel
 import com.dustgatherer.app.viewmodel.ItemDetailViewModel
 import com.dustgatherer.app.viewmodel.SettingsViewModel
@@ -33,6 +36,10 @@ class MainActivity : ComponentActivity() {
         val application = application as DustGathererApplication
         val repository = InventoryRepository(application.database.inventoryDao())
         settingsDataStore = SettingsDataStore(this)
+
+        // Create exporter and importer
+        val exporter = DataExporter(this, repository)
+        val importer = DataImporter(this, repository)
 
         setContent {
             val themeMode by settingsDataStore.themeMode.collectAsState(initial = ThemeMode.SYSTEM)
@@ -54,12 +61,16 @@ class MainActivity : ComponentActivity() {
                 val settingsViewModel: SettingsViewModel = viewModel(
                     factory = SettingsViewModel.provideFactory(settingsDataStore)
                 )
+                val importExportViewModel: ImportExportViewModel = viewModel(
+                    factory = ImportExportViewModel.provideFactory(exporter, importer)
+                )
 
                 AppNavigation(
                     inventoryViewModel = inventoryViewModel,
                     calendarViewModel = calendarViewModel,
                     itemDetailViewModel = itemDetailViewModel,
                     settingsViewModel = settingsViewModel,
+                    importExportViewModel = importExportViewModel,
                     onImageSelected = { uri -> saveImageToInternalStorage(uri) }
                 )
             }

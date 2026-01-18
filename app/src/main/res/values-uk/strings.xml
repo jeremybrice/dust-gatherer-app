@@ -16,6 +16,25 @@
     <string name="theme_light">Світла</string>
     <string name="theme_dark">Темна</string>
 
+    <!-- Import/Export Section -->
+    <string name="data_management">Керування даними</string>
+    <string name="export_data">Експорт даних</string>
+    <string name="export_description">Створити резервну копію товарів та зображень у ZIP файл</string>
+    <string name="import_data">Імпорт даних</string>
+    <string name="import_description">Відновити товари та зображення з резервної копії</string>
+    <string name="exporting">Експортування…</string>
+    <string name="importing">Імпортування…</string>
+    <string name="export_success">Експорт успішно завершено</string>
+    <string name="import_success">Імпорт завершено: %1$d товарів імпортовано</string>
+    <string name="export_error">Помилка експорту: %1$s</string>
+    <string name="import_error">Помилка імпорту: %1$s</string>
+    <string name="import_conflict_title">Параметри імпорту</string>
+    <string name="import_conflict_message">Знайдено %1$d товарів у резервній копії. Як їх імпортувати?</string>
+    <string name="import_skip_existing">Пропустити дублікати</string>
+    <string name="import_replace_existing">Замінити дублікати</string>
+    <string name="import_as_new">Імпортувати всі як нові товари</string>
+    <string name="items_skipped">%1$d товарів пропущено</string>
+
     <!-- Inventory Screen -->
     <string name="filter">Фільтр</string>
     <string name="all_items">Всі товари</string>

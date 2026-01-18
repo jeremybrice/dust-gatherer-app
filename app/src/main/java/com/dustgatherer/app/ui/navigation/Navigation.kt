@@ -25,6 +25,7 @@ import com.dustgatherer.app.ui.screens.inventory.InventoryScreen
 import com.dustgatherer.app.ui.screens.itemdetail.ItemDetailScreen
 import com.dustgatherer.app.ui.screens.settings.SettingsScreen
 import com.dustgatherer.app.viewmodel.CalendarViewModel
+import com.dustgatherer.app.viewmodel.ImportExportViewModel
 import com.dustgatherer.app.viewmodel.InventoryViewModel
 import com.dustgatherer.app.viewmodel.ItemDetailViewModel
 import com.dustgatherer.app.viewmodel.SettingsViewModel
@@ -51,6 +52,7 @@ fun AppNavigation(
     calendarViewModel: CalendarViewModel,
     itemDetailViewModel: ItemDetailViewModel,
     settingsViewModel: SettingsViewModel,
+    importExportViewModel: ImportExportViewModel,
     onImageSelected: (Uri) -> String?
 ) {
     val navController = rememberNavController()
@@ -145,6 +147,7 @@ fun AppNavigation(
             composable(Screen.Settings.route) {
                 SettingsScreen(
                     viewModel = settingsViewModel,
+                    importExportViewModel = importExportViewModel,
                     onNavigateBack = { navController.popBackStack() }
                 )
             }

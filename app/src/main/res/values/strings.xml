@@ -16,6 +16,25 @@
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>
 
+    <!-- Import/Export Section -->
+    <string name="data_management">Data Management</string>
+    <string name="export_data">Export Data</string>
+    <string name="export_description">Backup all items and images to a ZIP file</string>
+    <string name="import_data">Import Data</string>
+    <string name="import_description">Restore items and images from a backup</string>
+    <string name="exporting">Exporting…</string>
+    <string name="importing">Importing…</string>
+    <string name="export_success">Export completed successfully</string>
+    <string name="import_success">Import completed: %1$d items imported</string>
+    <string name="export_error">Export failed: %1$s</string>
+    <string name="import_error">Import failed: %1$s</string>
+    <string name="import_conflict_title">Import Options</string>
+    <string name="import_conflict_message">Found %1$d items in backup. How should they be imported?</string>
+    <string name="import_skip_existing">Skip duplicates</string>
+    <string name="import_replace_existing">Replace duplicates</string>
+    <string name="import_as_new">Import all as new items</string>
+    <string name="items_skipped">%1$d items skipped</string>
+
     <!-- Inventory Screen -->
     <string name="filter">Filter</string>
     <string name="all_items">All Items</string>

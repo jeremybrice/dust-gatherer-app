@@ -1,6 +1,7 @@
 package com.dustgatherer.app.ui.screens.settings
 
-import androidx.compose.foundation.clickable
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
@@ -18,17 +19,39 @@ import androidx.compose.ui.unit.dp
 import com.dustgatherer.app.R
 import com.dustgatherer.app.data.local.AppLanguage
 import com.dustgatherer.app.data.local.ThemeMode
+import com.dustgatherer.app.viewmodel.ImportExportViewModel
 import com.dustgatherer.app.viewmodel.SettingsViewModel
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     viewModel: SettingsViewModel,
+    importExportViewModel: ImportExportViewModel,
     onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val themeMode by viewModel.themeMode.collectAsState()
     val language by viewModel.language.collectAsState()
+    val exportState by importExportViewModel.exportState.collectAsState()
+    val importState by importExportViewModel.importState.collectAsState()
+
+    val timestamp = remember {
+        LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"))
+    }
+
+    val exportLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/zip")
+    ) { uri ->
+        uri?.let { importExportViewModel.startExport(it) }
+    }
+
+    val importLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        uri?.let { importExportViewModel.previewImport(it) }
+    }
 
     Scaffold(
         topBar = {
@@ -81,6 +104,29 @@ fun SettingsScreen(
                     }
                 }
             }
+
+            HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+
+            // Import/Export Section
+            ImportExportSection(
+                exportState = exportState,
+                importState = importState,
+                onExportClick = {
+                    exportLauncher.launch("dust_gatherer_backup_$timestamp.zip")
+                },
+                onImportClick = {
+                    importLauncher.launch(arrayOf("application/zip"))
+                },
+                onImportConfirm = { uri, strategy ->
+                    importExportViewModel.startImport(uri, strategy)
+                },
+                onDismissExportResult = {
+                    importExportViewModel.resetExportState()
+                },
+                onDismissImportResult = {
+                    importExportViewModel.resetImportState()
+                }
+            )
         }
     }
 }
