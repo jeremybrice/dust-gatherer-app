@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Background circle -->
+    <path
+        android:fillColor="#722F37"
+        android:pathData="M54,54m-30,0a30,30 0,1 1,60 0a30,30 0,1 1,-60 0"/>
+    <!-- Simple treasure chest / box icon -->
+    <path
+        android:fillColor="#FAF7F2"
+        android:pathData="M40,42 L68,42 L68,62 L40,62 Z"/>
+    <path
+        android:fillColor="#8B7355"
+        android:pathData="M38,48 L70,48 L70,52 L38,52 Z"/>
+    <path
+        android:fillColor="#D4A03A"
+        android:pathData="M52,48 L56,48 L56,56 L52,56 Z"/>
+</vector>

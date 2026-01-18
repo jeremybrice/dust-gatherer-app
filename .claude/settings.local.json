@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(java -version:*)",
+      "Bash(echo:*)",
+      "Bash(~/AppData/Local/Android/Sdk/platform-tools/adb.exe version)",
+      "Bash(\"/c/Program Files/Android/Android Studio/jbr/bin/java.exe\" -version)",
+      "Bash(curl:*)"
+    ]
+  }
+}

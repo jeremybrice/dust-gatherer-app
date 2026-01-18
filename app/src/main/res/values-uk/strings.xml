@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Dust Gatherer</string>
+
+    <!-- Navigation -->
+    <string name="inventory">Інвентар</string>
+    <string name="schedule">Розклад</string>
+    <string name="analytics">Аналітика</string>
+    <string name="settings">Налаштування</string>
+    <string name="back">Назад</string>
+
+    <!-- Settings Screen -->
+    <string name="theme">Тема</string>
+    <string name="language">Мова</string>
+    <string name="theme_system">Системна</string>
+    <string name="theme_light">Світла</string>
+    <string name="theme_dark">Темна</string>
+
+    <!-- Inventory Screen -->
+    <string name="filter">Фільтр</string>
+    <string name="all_items">Всі товари</string>
+    <string name="add_item">Додати товар</string>
+    <string name="search_items">Пошук товарів…</string>
+    <string name="no_items_match_search">Товари не знайдено</string>
+    <string name="no_items_yet">Товарів ще немає. Натисніть + щоб додати перший!</string>
+
+    <!-- Item Status -->
+    <string name="status_in_stock">В наявності</string>
+    <string name="status_scheduled">Заплановано</string>
+    <string name="status_posted">Опубліковано</string>
+    <string name="status_sold">Продано</string>
+
+    <!-- Item Card -->
+    <string name="bought_price">Куплено: $%1$s</string>
+    <string name="asking_price">Запитувана: $%1$s</string>
+    <string name="sold_price">Продано: $%1$s</string>
+
+    <!-- Item Actions -->
+    <string name="mark_as_sold">Позначити як продано</string>
+    <string name="mark_as_posted">Позначити як опубліковано</string>
+    <string name="final_sale_price">Остаточна ціна продажу</string>
+    <string name="confirm_sale">Підтвердити продаж</string>
+    <string name="sale_confirmed">Продаж підтверджено</string>
+    <string name="posted_confirmed">Товар опубліковано</string>
+
+    <!-- Item Detail Screen -->
+    <string name="edit_item">Редагувати товар</string>
+    <string name="save">Зберегти</string>
+    <string name="ok">ОК</string>
+    <string name="cancel">Скасувати</string>
+    <string name="title_required">Назва *</string>
+    <string name="description">Опис</string>
+    <string name="purchase_price_required">Ціна покупки *</string>
+    <string name="asking_price_label">Запитувана ціна</string>
+    <string name="purchase_date">Дата покупки</string>
+    <string name="scheduled_post_date">Запланована дата публікації</string>
+    <string name="not_scheduled">Не заплановано</string>
+    <string name="clear_date">Очистити дату</string>
+    <string name="purchase_location">Місце покупки</string>
+    <string name="category">Категорія</string>
+    <string name="notes">Нотатки</string>
+    <string name="tap_to_add_photo">Натисніть щоб додати фото</string>
+    <string name="change">Змінити</string>
+    <string name="item_image">Зображення товару</string>
+
+    <!-- Calendar Screen -->
+    <string name="unscheduled_count">%1$d не заплановано</string>
+    <string name="previous_month">Попередній місяць</string>
+    <string name="next_month">Наступний місяць</string>
+    <string name="no_items_scheduled">На цей день нічого не заплановано</string>
+    <string name="upcoming_posting_days">Найближчі дні публікацій</string>
+    <string name="items_count">%1$d товар</string>
+    <string name="items_count_plural">%1$d товарів</string>
+    <string name="unscheduled_items_count">Незаплановані товари (%1$d)</string>
+    <string name="auto_schedule">Авто-планування</string>
+
+    <!-- Analytics Screen -->
+    <string name="financial_summary">Фінансовий підсумок</string>
+    <string name="total_spent">Загальні витрати</string>
+    <string name="total_revenue">Загальний дохід</string>
+    <string name="net_profit">Чистий прибуток</string>
+    <string name="margin_percent">%1$s%% маржа</string>
+    <string name="inventory_status">Стан інвентарю</string>
+    <string name="total_items">Всього товарів</string>
+    <string name="active_listings">Активні оголошення</string>
+    <string name="items_sold">Продано товарів</string>
+    <string name="sell_through_rate">Коефіцієнт продажів</string>
+    <string name="averages">Середні показники</string>
+    <string name="avg_purchase">Сер. покупка</string>
+    <string name="avg_sale">Сер. продаж</string>
+</resources>
