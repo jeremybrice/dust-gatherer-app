@@ -20,7 +20,13 @@
 
 ## Screenshots
 
-<!-- Add screenshots here -->
+<p align="center">
+  <img src="images/dga-screenshot1.jpg" width="18%" />
+  <img src="images/dga-screenshot2.jpg" width="18%" />
+  <img src="images/dga-screenshot3.jpg" width="18%" />
+  <img src="images/dga-screenshot4.jpg" width="18%" />
+  <img src="images/dga-screenshot5.jpg" width="18%" />
+</p>
 
 ## Tech Stack
 
