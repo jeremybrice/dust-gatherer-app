@@ -1,6 +1,12 @@
-# Dust Gatherer
+<p align="center">
+  <img src="dust-gfatherer-logo.jpg" alt="Dust Gatherer Logo" width="200">
+</p>
 
-An Android app for tracking resale inventory — from thrift store finds to final sale.
+<h1 align="center">Dust Gatherer</h1>
+
+<p align="center">
+  An Android app for tracking resale inventory — from thrift store finds to final sale.
+</p>
 
 ## Features
 
