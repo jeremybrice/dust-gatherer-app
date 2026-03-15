@@ -106,8 +106,6 @@
     <string name="investment_overview">Investment Overview</string>
     <string name="total_expenses">Total Expenses</string>
     <string name="inventory_value">Inventory Value</string>
-    <string name="total_revenue">Total Revenue</string>
-    <string name="net_position">Net Position</string>
     <string name="sales_performance">Sales Performance</string>
     <string name="cost_of_goods_sold">Cost of Goods Sold</string>
     <string name="sales_revenue">Sales Revenue</string>
