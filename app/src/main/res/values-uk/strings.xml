@@ -81,6 +81,15 @@
     <string name="tap_to_add_photo">Натисніть щоб додати фото</string>
     <string name="change">Змінити</string>
     <string name="item_image">Зображення товару</string>
+    <string name="status">Статус</string>
+    <string name="delete_item">Видалити товар</string>
+    <string name="delete_item_confirm_title">Видалити товар?</string>
+    <string name="delete_item_confirm_message">Ви впевнені, що хочете видалити цей товар? Цю дію неможливо скасувати.</string>
+    <string name="delete">Видалити</string>
+    <string name="choose_photo_source">Додати фото</string>
+    <string name="take_photo">Зробити фото</string>
+    <string name="choose_from_gallery">Вибрати з галереї</string>
+    <string name="camera_permission_required">Для зйомки фото потрібен дозвіл камери</string>
 
     <!-- Calendar Screen -->
     <string name="unscheduled_count">%1$d не заплановано</string>

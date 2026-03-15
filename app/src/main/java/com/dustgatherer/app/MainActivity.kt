@@ -22,6 +22,8 @@ import com.dustgatherer.app.viewmodel.ImportExportViewModel
 import com.dustgatherer.app.viewmodel.InventoryViewModel
 import com.dustgatherer.app.viewmodel.ItemDetailViewModel
 import com.dustgatherer.app.viewmodel.SettingsViewModel
+import android.content.Context
+import androidx.core.content.FileProvider
 import java.io.File
 import java.util.Locale
 import java.util.UUID
@@ -71,7 +73,8 @@ class MainActivity : ComponentActivity() {
                     itemDetailViewModel = itemDetailViewModel,
                     settingsViewModel = settingsViewModel,
                     importExportViewModel = importExportViewModel,
-                    onImageSelected = { uri -> saveImageToInternalStorage(uri) }
+                    onImageSelected = { uri -> saveImageToInternalStorage(uri) },
+                    onCreateTempImageUri = { createTempImageUri() }
                 )
             }
         }
@@ -83,6 +86,15 @@ class MainActivity : ComponentActivity() {
         val config = Configuration(resources.configuration)
         config.setLocale(locale)
         resources.updateConfiguration(config, resources.displayMetrics)
+    }
+
+    private fun createTempImageUri(): Pair<Uri, String> {
+        val imagesDir = File(filesDir, "images")
+        if (!imagesDir.exists()) imagesDir.mkdirs()
+        val fileName = "item_${UUID.randomUUID()}.jpg"
+        val file = File(imagesDir, fileName)
+        val uri = FileProvider.getUriForFile(this, "${packageName}.fileprovider", file)
+        return Pair(uri, file.absolutePath)
     }
 
     private fun saveImageToInternalStorage(uri: Uri): String? {

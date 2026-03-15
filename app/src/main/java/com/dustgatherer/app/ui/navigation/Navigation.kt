@@ -53,7 +53,8 @@ fun AppNavigation(
     itemDetailViewModel: ItemDetailViewModel,
     settingsViewModel: SettingsViewModel,
     importExportViewModel: ImportExportViewModel,
-    onImageSelected: (Uri) -> String?
+    onImageSelected: (Uri) -> String?,
+    onCreateTempImageUri: () -> Pair<Uri, String> = { throw UnsupportedOperationException() }
 ) {
     val navController = rememberNavController()
 
@@ -140,7 +141,8 @@ fun AppNavigation(
                     viewModel = itemDetailViewModel,
                     itemId = if (itemId == 0L) null else itemId,
                     onNavigateBack = { navController.popBackStack() },
-                    onImageSelected = onImageSelected
+                    onImageSelected = onImageSelected,
+                    onCreateTempImageUri = onCreateTempImageUri
                 )
             }
 
