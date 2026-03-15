@@ -33,12 +33,15 @@ fun AnalyticsScreen(
 ) {
     val totalSpent by viewModel.totalSpent.collectAsState()
     val totalRevenue by viewModel.totalRevenue.collectAsState()
+    val costOfGoodsSold by viewModel.costOfGoodsSold.collectAsState()
     val totalItemCount by viewModel.totalItemCount.collectAsState()
     val soldItemCount by viewModel.soldItemCount.collectAsState()
     val activeListingsCount by viewModel.activeListingsCount.collectAsState()
 
-    val profit = totalRevenue - totalSpent
-    val profitMargin = if (totalRevenue > 0) (profit / totalRevenue) * 100 else 0.0
+    val inventoryValue = totalSpent - costOfGoodsSold
+    val salesProfit = totalRevenue - costOfGoodsSold
+    val salesMargin = if (totalRevenue > 0) (salesProfit / totalRevenue) * 100 else 0.0
+    val netPosition = salesProfit
 
     Scaffold(
         topBar = {
@@ -61,9 +64,9 @@ fun AnalyticsScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Summary cards row
+            // Investment Overview
             Text(
-                text = stringResource(R.string.financial_summary),
+                text = stringResource(R.string.investment_overview),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold
             )
@@ -73,7 +76,7 @@ fun AnalyticsScreen(
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 StatCard(
-                    title = stringResource(R.string.total_spent),
+                    title = stringResource(R.string.total_expenses),
                     value = "$${String.format("%.2f", totalSpent)}",
                     icon = Icons.Default.ShoppingCart,
                     iconTint = Taupe,
@@ -81,49 +84,100 @@ fun AnalyticsScreen(
                 )
 
                 StatCard(
+                    title = stringResource(R.string.inventory_value),
+                    value = "$${String.format("%.2f", inventoryValue)}",
+                    icon = Icons.Default.Warehouse,
+                    iconTint = StatusScheduled,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                StatCard(
                     title = stringResource(R.string.total_revenue),
                     value = "$${String.format("%.2f", totalRevenue)}",
                     icon = Icons.Default.AttachMoney,
                     iconTint = Sage,
                     modifier = Modifier.weight(1f)
                 )
+
+                StatCard(
+                    title = stringResource(R.string.net_position),
+                    value = "${if (netPosition >= 0) "+" else ""}$${String.format("%.2f", netPosition)}",
+                    icon = Icons.Default.AccountBalance,
+                    iconTint = if (netPosition >= 0) Sage else MaterialTheme.colorScheme.error,
+                    modifier = Modifier.weight(1f)
+                )
             }
 
-            // Profit card
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(
-                    containerColor = if (profit >= 0) Sage.copy(alpha = 0.1f)
-                    else MaterialTheme.colorScheme.errorContainer
+            // Sales Performance (only when there are sales)
+            if (soldItemCount > 0) {
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = stringResource(R.string.sales_performance),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold
                 )
-            ) {
+
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Column {
-                        Text(
-                            text = stringResource(R.string.net_profit),
-                            style = MaterialTheme.typography.labelLarge,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-                        )
-                        Text(
-                            text = "${if (profit >= 0) "+" else ""}$${String.format("%.2f", profit)}",
-                            style = MaterialTheme.typography.headlineMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = if (profit >= 0) Sage else MaterialTheme.colorScheme.error
-                        )
-                    }
-                    if (totalRevenue > 0) {
+                    StatCard(
+                        title = stringResource(R.string.cost_of_goods_sold),
+                        value = "$${String.format("%.2f", costOfGoodsSold)}",
+                        icon = Icons.Default.Receipt,
+                        iconTint = Taupe,
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    StatCard(
+                        title = stringResource(R.string.sales_revenue),
+                        value = "$${String.format("%.2f", totalRevenue)}",
+                        icon = Icons.Default.AttachMoney,
+                        iconTint = Sage,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+
+                // Sales Profit card with margin badge
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = if (salesProfit >= 0) Sage.copy(alpha = 0.1f)
+                        else MaterialTheme.colorScheme.errorContainer
+                    )
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text(
+                                text = stringResource(R.string.sales_profit),
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                            )
+                            Text(
+                                text = "${if (salesProfit >= 0) "+" else ""}$${String.format("%.2f", salesProfit)}",
+                                style = MaterialTheme.typography.headlineMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = if (salesProfit >= 0) Sage else MaterialTheme.colorScheme.error
+                            )
+                        }
                         Surface(
                             shape = RoundedCornerShape(8.dp),
-                            color = if (profit >= 0) Sage else MaterialTheme.colorScheme.error
+                            color = if (salesProfit >= 0) Sage else MaterialTheme.colorScheme.error
                         ) {
                             Text(
-                                text = stringResource(R.string.margin_percent, String.format("%.1f", profitMargin)),
+                                text = stringResource(R.string.margin_percent, String.format("%.1f", salesMargin)),
                                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                                 style = MaterialTheme.typography.labelMedium,
                                 color = Color.White
@@ -239,7 +293,7 @@ fun AnalyticsScreen(
 
                 val avgPurchasePrice = if (totalItemCount > 0) totalSpent / totalItemCount else 0.0
                 val avgSalePrice = if (soldItemCount > 0) totalRevenue / soldItemCount else 0.0
-                val avgProfit = if (soldItemCount > 0) profit / soldItemCount else 0.0
+                val avgProfit = if (soldItemCount > 0) salesProfit / soldItemCount else 0.0
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -260,6 +314,21 @@ fun AnalyticsScreen(
                         iconTint = Sage,
                         modifier = Modifier.weight(1f)
                     )
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    StatCard(
+                        title = stringResource(R.string.avg_profit),
+                        value = "${if (avgProfit >= 0) "+" else ""}$${String.format("%.2f", avgProfit)}",
+                        icon = Icons.Default.TrendingUp,
+                        iconTint = if (avgProfit >= 0) Sage else MaterialTheme.colorScheme.error,
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    Spacer(modifier = Modifier.weight(1f))
                 }
             }
 
