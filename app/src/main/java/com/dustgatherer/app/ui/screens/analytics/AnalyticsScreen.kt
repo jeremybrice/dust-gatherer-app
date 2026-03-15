@@ -41,7 +41,6 @@ fun AnalyticsScreen(
     val inventoryValue = totalSpent - costOfGoodsSold
     val salesProfit = totalRevenue - costOfGoodsSold
     val salesMargin = if (totalRevenue > 0) (salesProfit / totalRevenue) * 100 else 0.0
-    val netPosition = salesProfit
 
     Scaffold(
         topBar = {
@@ -88,27 +87,6 @@ fun AnalyticsScreen(
                     value = "$${String.format("%.2f", inventoryValue)}",
                     icon = Icons.Default.Warehouse,
                     iconTint = StatusScheduled,
-                    modifier = Modifier.weight(1f)
-                )
-            }
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                StatCard(
-                    title = stringResource(R.string.total_revenue),
-                    value = "$${String.format("%.2f", totalRevenue)}",
-                    icon = Icons.Default.AttachMoney,
-                    iconTint = Sage,
-                    modifier = Modifier.weight(1f)
-                )
-
-                StatCard(
-                    title = stringResource(R.string.net_position),
-                    value = "${if (netPosition >= 0) "+" else ""}$${String.format("%.2f", netPosition)}",
-                    icon = Icons.Default.AccountBalance,
-                    iconTint = if (netPosition >= 0) Sage else MaterialTheme.colorScheme.error,
                     modifier = Modifier.weight(1f)
                 )
             }
