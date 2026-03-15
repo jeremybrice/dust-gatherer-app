@@ -55,6 +55,9 @@ interface InventoryDao {
     @Query("SELECT SUM(sellingPrice) FROM inventory_items WHERE soldDate IS NOT NULL")
     fun getTotalRevenue(): Flow<Double?>
 
+    @Query("SELECT SUM(purchasePrice) FROM inventory_items WHERE soldDate IS NOT NULL")
+    fun getCostOfGoodsSold(): Flow<Double?>
+
     @Query("SELECT COUNT(*) FROM inventory_items")
     fun getTotalItemCount(): Flow<Int>
 

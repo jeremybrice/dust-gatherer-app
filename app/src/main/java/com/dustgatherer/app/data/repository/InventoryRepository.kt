@@ -39,6 +39,8 @@ class InventoryRepository(private val inventoryDao: InventoryDao) {
 
     fun getTotalRevenue(): Flow<Double?> = inventoryDao.getTotalRevenue()
 
+    fun getCostOfGoodsSold(): Flow<Double?> = inventoryDao.getCostOfGoodsSold()
+
     fun getTotalItemCount(): Flow<Int> = inventoryDao.getTotalItemCount()
 
     fun getSoldItemCount(): Flow<Int> = inventoryDao.getSoldItemCount()

@@ -94,10 +94,15 @@
     <string name="auto_schedule">Auto-schedule</string>
 
     <!-- Analytics Screen -->
-    <string name="financial_summary">Financial Summary</string>
-    <string name="total_spent">Total Spent</string>
+    <string name="investment_overview">Investment Overview</string>
+    <string name="total_expenses">Total Expenses</string>
+    <string name="inventory_value">Inventory Value</string>
     <string name="total_revenue">Total Revenue</string>
-    <string name="net_profit">Net Profit</string>
+    <string name="net_position">Net Position</string>
+    <string name="sales_performance">Sales Performance</string>
+    <string name="cost_of_goods_sold">Cost of Goods Sold</string>
+    <string name="sales_revenue">Sales Revenue</string>
+    <string name="sales_profit">Sales Profit</string>
     <string name="margin_percent">%1$s%% margin</string>
     <string name="inventory_status">Inventory Status</string>
     <string name="total_items">Total Items</string>
@@ -107,4 +112,5 @@
     <string name="averages">Averages</string>
     <string name="avg_purchase">Avg. Purchase</string>
     <string name="avg_sale">Avg. Sale</string>
+    <string name="avg_profit">Avg. Profit</string>
 </resources>

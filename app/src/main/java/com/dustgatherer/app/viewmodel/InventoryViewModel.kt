@@ -55,6 +55,10 @@ class InventoryViewModel(private val repository: InventoryRepository) : ViewMode
         .map { it ?: 0.0 }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
 
+    val costOfGoodsSold: StateFlow<Double> = repository.getCostOfGoodsSold()
+        .map { it ?: 0.0 }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
+
     val totalItemCount: StateFlow<Int> = repository.getTotalItemCount()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
 
