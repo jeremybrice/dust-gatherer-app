@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.dustgatherer.app.data.model.InventoryItem
+import com.dustgatherer.app.data.model.ItemStatus
 import com.dustgatherer.app.data.repository.InventoryRepository
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -40,6 +41,14 @@ data class ItemFormState(
 
     val canMarkAsPosted: Boolean
         get() = isEditing && !isSold && !isPosted
+
+    val currentStatus: ItemStatus
+        get() = when {
+            soldDate != null -> ItemStatus.SOLD
+            postedDate != null -> ItemStatus.POSTED
+            scheduledPostDate != null -> ItemStatus.SCHEDULED
+            else -> ItemStatus.INVENTORY
+        }
 }
 
 class ItemDetailViewModel(private val repository: InventoryRepository) : ViewModel() {
@@ -49,6 +58,9 @@ class ItemDetailViewModel(private val repository: InventoryRepository) : ViewMod
 
     private val _saveSuccess = MutableSharedFlow<Boolean>()
     val saveSuccess: SharedFlow<Boolean> = _saveSuccess.asSharedFlow()
+
+    private val _deleteSuccess = MutableSharedFlow<Boolean>()
+    val deleteSuccess: SharedFlow<Boolean> = _deleteSuccess.asSharedFlow()
 
     fun loadItem(itemId: Long) {
         viewModelScope.launch {
@@ -144,6 +156,40 @@ class ItemDetailViewModel(private val repository: InventoryRepository) : ViewMod
 
     fun resetForm() {
         _formState.value = ItemFormState()
+    }
+
+    fun changeStatus(newStatus: ItemStatus) {
+        val state = _formState.value
+        when (newStatus) {
+            ItemStatus.INVENTORY -> {
+                _formState.value = state.copy(
+                    scheduledPostDate = null,
+                    postedDate = null
+                )
+            }
+            ItemStatus.SCHEDULED -> {
+                _formState.value = state.copy(
+                    scheduledPostDate = state.scheduledPostDate ?: LocalDate.now(),
+                    postedDate = null
+                )
+            }
+            ItemStatus.POSTED -> {
+                _formState.value = state.copy(
+                    postedDate = state.postedDate ?: LocalDate.now()
+                )
+            }
+            ItemStatus.SOLD -> { /* Handled by markAsSold dialog */ }
+        }
+    }
+
+    fun deleteItem() {
+        val state = _formState.value
+        if (!state.isEditing || state.editingItemId == null) return
+
+        viewModelScope.launch {
+            repository.deleteItemById(state.editingItemId)
+            _deleteSuccess.emit(true)
+        }
     }
 
     fun markAsSold(sellingPrice: Double) {

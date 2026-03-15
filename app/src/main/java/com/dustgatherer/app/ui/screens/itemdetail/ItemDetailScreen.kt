@@ -1,6 +1,8 @@
 package com.dustgatherer.app.ui.screens.itemdetail
 
+import android.Manifest
 import android.net.Uri
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -26,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.dustgatherer.app.R
 import com.dustgatherer.app.data.model.InventoryItem
+import com.dustgatherer.app.data.model.ItemStatus
 import com.dustgatherer.app.ui.components.MarkAsSoldDialog
 import com.dustgatherer.app.viewmodel.ItemDetailViewModel
 import java.time.LocalDate
@@ -38,6 +41,7 @@ fun ItemDetailScreen(
     itemId: Long?,
     onNavigateBack: () -> Unit,
     onImageSelected: (Uri) -> String?,
+    onCreateTempImageUri: () -> Pair<Uri, String> = { throw UnsupportedOperationException() },
     modifier: Modifier = Modifier
 ) {
     val formState by viewModel.formState.collectAsState()
@@ -47,6 +51,13 @@ fun ItemDetailScreen(
     var datePickerTarget by remember { mutableStateOf<DatePickerTarget?>(null) }
     var showScheduleDatePicker by remember { mutableStateOf(false) }
     var showMarkAsSoldDialog by remember { mutableStateOf(false) }
+    var showDeleteConfirmDialog by remember { mutableStateOf(false) }
+    var showPhotoSourceDialog by remember { mutableStateOf(false) }
+    var statusDropdownExpanded by remember { mutableStateOf(false) }
+
+    // Camera state
+    var pendingCameraUri by remember { mutableStateOf<Uri?>(null) }
+    var pendingCameraPath by remember { mutableStateOf<String?>(null) }
 
     // Load item if editing
     LaunchedEffect(itemId) {
@@ -66,13 +77,49 @@ fun ItemDetailScreen(
         }
     }
 
-    // Image picker
+    // Handle delete success
+    LaunchedEffect(Unit) {
+        viewModel.deleteSuccess.collect { success ->
+            if (success) {
+                onNavigateBack()
+            }
+        }
+    }
+
+    // Gallery picker
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         uri?.let { selectedUri ->
             val savedPath = onImageSelected(selectedUri)
             savedPath?.let { viewModel.updateImagePath(it) }
+        }
+    }
+
+    // Camera launcher
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture()
+    ) { success: Boolean ->
+        if (success) {
+            pendingCameraPath?.let { path ->
+                viewModel.updateImagePath(path)
+            }
+        }
+        pendingCameraUri = null
+        pendingCameraPath = null
+    }
+
+    // Camera permission launcher
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (isGranted) {
+            val (uri, path) = onCreateTempImageUri()
+            pendingCameraUri = uri
+            pendingCameraPath = path
+            cameraLauncher.launch(uri)
+        } else {
+            Toast.makeText(context, context.getString(R.string.camera_permission_required), Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -112,7 +159,7 @@ fun ItemDetailScreen(
                     .height(200.dp)
                     .clip(RoundedCornerShape(12.dp))
                     .background(MaterialTheme.colorScheme.surfaceVariant)
-                    .clickable { imagePickerLauncher.launch("image/*") },
+                    .clickable { showPhotoSourceDialog = true },
                 contentAlignment = Alignment.Center
             ) {
                 if (formState.imagePath != null) {
@@ -260,6 +307,57 @@ fun ItemDetailScreen(
                 )
             )
 
+            // Status dropdown (only when editing and not sold)
+            if (formState.isEditing && !formState.isSold) {
+                ExposedDropdownMenuBox(
+                    expanded = statusDropdownExpanded,
+                    onExpandedChange = { statusDropdownExpanded = it }
+                ) {
+                    val statusLabel = when (formState.currentStatus) {
+                        ItemStatus.INVENTORY -> stringResource(R.string.status_in_stock)
+                        ItemStatus.SCHEDULED -> stringResource(R.string.status_scheduled)
+                        ItemStatus.POSTED -> stringResource(R.string.status_posted)
+                        ItemStatus.SOLD -> stringResource(R.string.status_sold)
+                    }
+                    OutlinedTextField(
+                        value = statusLabel,
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text(stringResource(R.string.status)) },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = statusDropdownExpanded) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .menuAnchor()
+                    )
+                    ExposedDropdownMenu(
+                        expanded = statusDropdownExpanded,
+                        onDismissRequest = { statusDropdownExpanded = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.status_in_stock)) },
+                            onClick = {
+                                viewModel.changeStatus(ItemStatus.INVENTORY)
+                                statusDropdownExpanded = false
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.status_scheduled)) },
+                            onClick = {
+                                viewModel.changeStatus(ItemStatus.SCHEDULED)
+                                statusDropdownExpanded = false
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.status_posted)) },
+                            onClick = {
+                                viewModel.changeStatus(ItemStatus.POSTED)
+                                statusDropdownExpanded = false
+                            }
+                        )
+                    }
+                }
+            }
+
             // Purchase location
             OutlinedTextField(
                 value = formState.purchaseLocation,
@@ -290,45 +388,45 @@ fun ItemDetailScreen(
                 maxLines = 5
             )
 
-            // Action buttons for status changes
-            if (formState.canMarkAsPosted || formState.canMarkAsSold) {
-                Spacer(modifier = Modifier.height(16.dp))
+            // Mark as Sold button (only if editing and not already sold)
+            if (formState.canMarkAsSold) {
+                Spacer(modifier = Modifier.height(8.dp))
                 HorizontalDivider()
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                Button(
+                    onClick = { showMarkAsSoldDialog = true },
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    if (formState.canMarkAsPosted) {
-                        OutlinedButton(
-                            onClick = { viewModel.markAsPosted() },
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Icon(
-                                Icons.Default.Sell,
-                                contentDescription = null,
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(stringResource(R.string.mark_as_posted))
-                        }
-                    }
+                    Icon(
+                        Icons.Default.CheckCircle,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(stringResource(R.string.mark_as_sold))
+                }
+            }
 
-                    if (formState.canMarkAsSold) {
-                        Button(
-                            onClick = { showMarkAsSoldDialog = true },
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Icon(
-                                Icons.Default.CheckCircle,
-                                contentDescription = null,
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(stringResource(R.string.mark_as_sold))
-                        }
-                    }
+            // Delete button (only when editing an existing item)
+            if (formState.isEditing) {
+                Spacer(modifier = Modifier.height(8.dp))
+
+                OutlinedButton(
+                    onClick = { showDeleteConfirmDialog = true },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = MaterialTheme.colorScheme.error
+                    ),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.error)
+                ) {
+                    Icon(
+                        Icons.Default.Delete,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(stringResource(R.string.delete_item))
                 }
             }
 
@@ -401,6 +499,67 @@ fun ItemDetailScreen(
             onConfirm = { finalPrice ->
                 viewModel.markAsSold(finalPrice)
                 showMarkAsSoldDialog = false
+            }
+        )
+    }
+
+    // Delete confirmation dialog
+    if (showDeleteConfirmDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirmDialog = false },
+            title = { Text(stringResource(R.string.delete_item_confirm_title)) },
+            text = { Text(stringResource(R.string.delete_item_confirm_message)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDeleteConfirmDialog = false
+                        viewModel.deleteItem()
+                    },
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    Text(stringResource(R.string.delete))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteConfirmDialog = false }) {
+                    Text(stringResource(R.string.cancel))
+                }
+            }
+        )
+    }
+
+    // Photo source chooser dialog
+    if (showPhotoSourceDialog) {
+        AlertDialog(
+            onDismissRequest = { showPhotoSourceDialog = false },
+            title = { Text(stringResource(R.string.choose_photo_source)) },
+            text = {
+                Column {
+                    ListItem(
+                        headlineContent = { Text(stringResource(R.string.take_photo)) },
+                        leadingContent = { Icon(Icons.Default.CameraAlt, contentDescription = null) },
+                        modifier = Modifier.clickable {
+                            showPhotoSourceDialog = false
+                            cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                        }
+                    )
+                    ListItem(
+                        headlineContent = { Text(stringResource(R.string.choose_from_gallery)) },
+                        leadingContent = { Icon(Icons.Default.PhotoLibrary, contentDescription = null) },
+                        modifier = Modifier.clickable {
+                            showPhotoSourceDialog = false
+                            imagePickerLauncher.launch("image/*")
+                        }
+                    )
+                }
+            },
+            confirmButton = {},
+            dismissButton = {
+                TextButton(onClick = { showPhotoSourceDialog = false }) {
+                    Text(stringResource(R.string.cancel))
+                }
             }
         )
     }
