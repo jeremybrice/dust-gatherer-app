@@ -2,7 +2,11 @@ package com.dustgatherer.app.data.export
 
 import android.content.Context
 import android.net.Uri
+import com.dustgatherer.app.data.model.Category
+import com.dustgatherer.app.data.model.Site
+import com.dustgatherer.app.data.repository.CategoryRepository
 import com.dustgatherer.app.data.repository.InventoryRepository
+import com.dustgatherer.app.data.repository.SiteRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
@@ -13,7 +17,9 @@ import java.util.zip.ZipInputStream
 
 class DataImporter(
     private val context: Context,
-    private val repository: InventoryRepository
+    private val repository: InventoryRepository,
+    private val categoryRepository: CategoryRepository? = null,
+    private val siteRepository: SiteRepository? = null
 ) {
     private val json = Json {
         ignoreUnknownKeys = true
@@ -123,6 +129,18 @@ class DataImporter(
             // Bulk insert new items
             if (itemsToImport.isNotEmpty()) {
                 repository.insertItems(itemsToImport)
+            }
+
+            // Import categories and sites
+            if (exportData.categories.isNotEmpty()) {
+                categoryRepository?.insertCategories(
+                    exportData.categories.map { Category(name = it) }
+                )
+            }
+            if (exportData.sites.isNotEmpty()) {
+                siteRepository?.insertSites(
+                    exportData.sites.map { Site(name = it) }
+                )
             }
 
             Result.success(

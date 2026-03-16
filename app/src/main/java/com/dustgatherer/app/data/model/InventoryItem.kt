@@ -19,6 +19,7 @@ data class InventoryItem(
     val imagePath: String? = null,
     val purchaseLocation: String = "",
     val category: String = "",
+    val site: String = "",
     val notes: String = "",
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis()

@@ -3,7 +3,9 @@ package com.dustgatherer.app.data.export
 import android.content.Context
 import android.net.Uri
 import com.dustgatherer.app.BuildConfig
+import com.dustgatherer.app.data.repository.CategoryRepository
 import com.dustgatherer.app.data.repository.InventoryRepository
+import com.dustgatherer.app.data.repository.SiteRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.encodeToString
@@ -17,7 +19,9 @@ import java.util.zip.ZipOutputStream
 
 class DataExporter(
     private val context: Context,
-    private val repository: InventoryRepository
+    private val repository: InventoryRepository,
+    private val categoryRepository: CategoryRepository? = null,
+    private val siteRepository: SiteRepository? = null
 ) {
     private val json = Json {
         prettyPrint = true
@@ -38,7 +42,15 @@ class DataExporter(
                 itemCount = items.size
             )
 
-            val exportData = ExportData(manifest = manifest, items = exportItems)
+            val categoryNames = categoryRepository?.getAllCategoriesSnapshot()?.map { it.name } ?: emptyList()
+            val siteNames = siteRepository?.getAllSitesSnapshot()?.map { it.name } ?: emptyList()
+
+            val exportData = ExportData(
+                manifest = manifest,
+                items = exportItems,
+                categories = categoryNames,
+                sites = siteNames
+            )
 
             val totalSteps = items.count { it.imagePath != null } + 1 // +1 for JSON
             var completedSteps = 0

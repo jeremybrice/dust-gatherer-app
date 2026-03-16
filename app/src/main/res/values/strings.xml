@@ -15,6 +15,15 @@
     <string name="theme_system">System Default</string>
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>
+    <string name="options">Options</string>
+    <string name="categories">Categories</string>
+    <string name="sites">Sites</string>
+    <string name="add_category">Add Category</string>
+    <string name="add_site">Add Site</string>
+    <string name="category_exists">Category already exists</string>
+    <string name="site_exists">Site already exists</string>
+    <string name="no_categories">No categories yet. Add one above!</string>
+    <string name="no_sites">No sites yet. Add one above!</string>
 
     <!-- Import/Export Section -->
     <string name="data_management">Data Management</string>
@@ -77,6 +86,7 @@
     <string name="clear_date">Clear date</string>
     <string name="purchase_location">Purchase Location</string>
     <string name="category">Category</string>
+    <string name="site">Site</string>
     <string name="notes">Notes</string>
     <string name="tap_to_add_photo">Tap to add photo</string>
     <string name="change">Change</string>
