@@ -89,7 +89,7 @@ Changes:
 - Read selection state from ViewModel (`selectedItemIds`, `isSelectionMode`)
 - **When in selection mode:**
   - Replace the top app bar with a **selection toolbar** showing: [X close] "3 selected" [Select All toggle]
-  - Hide the search bar and filter chips (or keep them — TBD, but hiding simplifies the UX)
+  - Hide the search bar and filter chips (user should filter before entering selection mode)
   - Disable swipe gestures on cards (selection mode only uses taps)
   - Show a **bottom action bar** with the bulk action buttons
 - **Item tap behavior changes:**
@@ -183,10 +183,11 @@ Dialogs for each action:
 
 ## Edge Cases & Considerations
 
-- **Filtered list + select all:** "Select All" only selects items currently visible (matching search/filter). This avoids accidentally modifying items the user can't see.
+- **Filtered list + select all:** ✅ DECIDED — "Select All" only selects items currently visible (matching search/filter). This avoids accidentally modifying items the user can't see.
+- **Search/filter hidden during selection:** ✅ DECIDED — The search bar and filter chips are hidden when in selection mode. The user should apply filters *before* entering selection mode. This keeps the UI clean and avoids confusing interactions where the visible set changes mid-selection.
 - **Empty selection:** If the user deselects all items manually, exit selection mode automatically.
 - **Back button:** Pressing system back while in selection mode exits selection mode (doesn't navigate away). Uses `BackHandler` composable.
-- **Sold items in selection:** If some selected items are already Sold and the user picks "Set Status → Posted", the sold status is overwritten. This is intentional — the user explicitly chose this action. But we should show a confirmation if any selected items are Sold ("X items are currently Sold. Change them anyway?").
+- **Sold items in selection:** ✅ DECIDED — Show a warning confirmation dialog if any selected items are currently Sold (e.g., "X of your selected items are marked as Sold. Are you sure you want to change their status?"). The user must confirm before the action proceeds.
 - **Room IN clause limit:** SQLite has a limit of ~999 variables in an IN clause. For very large inventories, we may need to batch the IDs. Unlikely for this app's scale but worth noting.
 - **Haptic feedback:** Add `HapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)` when entering selection mode for tactile confirmation.
 - **Accessibility:** Ensure checkboxes have proper content descriptions ("Selected" / "Not selected") and the selection count is announced.
