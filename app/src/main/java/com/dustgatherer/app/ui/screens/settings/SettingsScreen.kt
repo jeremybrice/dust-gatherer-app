@@ -23,6 +23,9 @@ import com.dustgatherer.app.viewmodel.ImportExportViewModel
 import com.dustgatherer.app.viewmodel.SettingsViewModel
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import androidx.compose.material.icons.filled.Category
+import androidx.compose.material.icons.filled.Store
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -30,6 +33,8 @@ fun SettingsScreen(
     viewModel: SettingsViewModel,
     importExportViewModel: ImportExportViewModel,
     onNavigateBack: () -> Unit,
+    onNavigateToCategories: () -> Unit = {},
+    onNavigateToSites: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val themeMode by viewModel.themeMode.collectAsState()
@@ -107,6 +112,24 @@ fun SettingsScreen(
 
             HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
 
+            // Options Section (Categories & Sites)
+            SettingsSection(title = stringResource(R.string.options)) {
+                Column {
+                    SettingsNavigationRow(
+                        icon = Icons.Default.Category,
+                        label = stringResource(R.string.categories),
+                        onClick = onNavigateToCategories
+                    )
+                    SettingsNavigationRow(
+                        icon = Icons.Default.Store,
+                        label = stringResource(R.string.sites),
+                        onClick = onNavigateToSites
+                    )
+                }
+            }
+
+            HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+
             // Import/Export Section
             ImportExportSection(
                 exportState = exportState,
@@ -148,6 +171,42 @@ private fun SettingsSection(
         )
         Spacer(modifier = Modifier.height(8.dp))
         content()
+    }
+}
+
+@Composable
+private fun SettingsNavigationRow(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    label: String,
+    onClick: () -> Unit
+) {
+    Surface(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.width(16.dp))
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.weight(1f)
+            )
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
     }
 }
 

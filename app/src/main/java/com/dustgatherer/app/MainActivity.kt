@@ -14,14 +14,18 @@ import com.dustgatherer.app.data.export.DataImporter
 import com.dustgatherer.app.data.local.AppLanguage
 import com.dustgatherer.app.data.local.SettingsDataStore
 import com.dustgatherer.app.data.local.ThemeMode
+import com.dustgatherer.app.data.repository.CategoryRepository
 import com.dustgatherer.app.data.repository.InventoryRepository
+import com.dustgatherer.app.data.repository.SiteRepository
 import com.dustgatherer.app.ui.navigation.AppNavigation
 import com.dustgatherer.app.ui.theme.DustGathererTheme
 import com.dustgatherer.app.viewmodel.CalendarViewModel
+import com.dustgatherer.app.viewmodel.CategoryViewModel
 import com.dustgatherer.app.viewmodel.ImportExportViewModel
 import com.dustgatherer.app.viewmodel.InventoryViewModel
 import com.dustgatherer.app.viewmodel.ItemDetailViewModel
 import com.dustgatherer.app.viewmodel.SettingsViewModel
+import com.dustgatherer.app.viewmodel.SiteViewModel
 import android.content.Context
 import androidx.core.content.FileProvider
 import java.io.File
@@ -37,11 +41,13 @@ class MainActivity : ComponentActivity() {
 
         val application = application as DustGathererApplication
         val repository = InventoryRepository(application.database.inventoryDao())
+        val categoryRepository = CategoryRepository(application.database.categoryDao())
+        val siteRepository = SiteRepository(application.database.siteDao())
         settingsDataStore = SettingsDataStore(this)
 
         // Create exporter and importer
-        val exporter = DataExporter(this, repository)
-        val importer = DataImporter(this, repository)
+        val exporter = DataExporter(this, repository, categoryRepository, siteRepository)
+        val importer = DataImporter(this, repository, categoryRepository, siteRepository)
 
         setContent {
             val themeMode by settingsDataStore.themeMode.collectAsState(initial = ThemeMode.SYSTEM)
@@ -66,6 +72,12 @@ class MainActivity : ComponentActivity() {
                 val importExportViewModel: ImportExportViewModel = viewModel(
                     factory = ImportExportViewModel.provideFactory(exporter, importer)
                 )
+                val categoryViewModel: CategoryViewModel = viewModel(
+                    factory = CategoryViewModel.provideFactory(categoryRepository)
+                )
+                val siteViewModel: SiteViewModel = viewModel(
+                    factory = SiteViewModel.provideFactory(siteRepository)
+                )
 
                 AppNavigation(
                     inventoryViewModel = inventoryViewModel,
@@ -73,6 +85,8 @@ class MainActivity : ComponentActivity() {
                     itemDetailViewModel = itemDetailViewModel,
                     settingsViewModel = settingsViewModel,
                     importExportViewModel = importExportViewModel,
+                    categoryViewModel = categoryViewModel,
+                    siteViewModel = siteViewModel,
                     onImageSelected = { uri -> saveImageToInternalStorage(uri) },
                     onCreateTempImageUri = { createTempImageUri() }
                 )

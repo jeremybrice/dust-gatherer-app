@@ -30,7 +30,9 @@ import com.dustgatherer.app.R
 import com.dustgatherer.app.data.model.InventoryItem
 import com.dustgatherer.app.data.model.ItemStatus
 import com.dustgatherer.app.ui.components.MarkAsSoldDialog
+import com.dustgatherer.app.viewmodel.CategoryViewModel
 import com.dustgatherer.app.viewmodel.ItemDetailViewModel
+import com.dustgatherer.app.viewmodel.SiteViewModel
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
@@ -38,6 +40,8 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun ItemDetailScreen(
     viewModel: ItemDetailViewModel,
+    categoryViewModel: CategoryViewModel,
+    siteViewModel: SiteViewModel,
     itemId: Long?,
     onNavigateBack: () -> Unit,
     onImageSelected: (Uri) -> String?,
@@ -54,6 +58,11 @@ fun ItemDetailScreen(
     var showDeleteConfirmDialog by remember { mutableStateOf(false) }
     var showPhotoSourceDialog by remember { mutableStateOf(false) }
     var statusDropdownExpanded by remember { mutableStateOf(false) }
+    var categoryDropdownExpanded by remember { mutableStateOf(false) }
+    var siteDropdownExpanded by remember { mutableStateOf(false) }
+
+    val categories by categoryViewModel.categories.collectAsState()
+    val sites by siteViewModel.sites.collectAsState()
 
     // Camera state
     var pendingCameraUri by remember { mutableStateOf<Uri?>(null) }
@@ -368,15 +377,83 @@ fun ItemDetailScreen(
                 leadingIcon = { Icon(Icons.Default.LocationOn, contentDescription = null) }
             )
 
-            // Category
-            OutlinedTextField(
-                value = formState.category,
-                onValueChange = { viewModel.updateCategory(it) },
-                label = { Text(stringResource(R.string.category)) },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                leadingIcon = { Icon(Icons.Default.Category, contentDescription = null) }
-            )
+            // Category dropdown
+            ExposedDropdownMenuBox(
+                expanded = categoryDropdownExpanded,
+                onExpandedChange = { categoryDropdownExpanded = it }
+            ) {
+                OutlinedTextField(
+                    value = formState.category,
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text(stringResource(R.string.category)) },
+                    leadingIcon = { Icon(Icons.Default.Category, contentDescription = null) },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = categoryDropdownExpanded) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .menuAnchor()
+                )
+                ExposedDropdownMenu(
+                    expanded = categoryDropdownExpanded,
+                    onDismissRequest = { categoryDropdownExpanded = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("") },
+                        onClick = {
+                            viewModel.updateCategory("")
+                            categoryDropdownExpanded = false
+                        }
+                    )
+                    categories.forEach { category ->
+                        DropdownMenuItem(
+                            text = { Text(category.name) },
+                            onClick = {
+                                viewModel.updateCategory(category.name)
+                                categoryDropdownExpanded = false
+                            }
+                        )
+                    }
+                }
+            }
+
+            // Site dropdown
+            ExposedDropdownMenuBox(
+                expanded = siteDropdownExpanded,
+                onExpandedChange = { siteDropdownExpanded = it }
+            ) {
+                OutlinedTextField(
+                    value = formState.site,
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text(stringResource(R.string.site)) },
+                    leadingIcon = { Icon(Icons.Default.Store, contentDescription = null) },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = siteDropdownExpanded) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .menuAnchor()
+                )
+                ExposedDropdownMenu(
+                    expanded = siteDropdownExpanded,
+                    onDismissRequest = { siteDropdownExpanded = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("") },
+                        onClick = {
+                            viewModel.updateSite("")
+                            siteDropdownExpanded = false
+                        }
+                    )
+                    sites.forEach { site ->
+                        DropdownMenuItem(
+                            text = { Text(site.name) },
+                            onClick = {
+                                viewModel.updateSite(site.name)
+                                siteDropdownExpanded = false
+                            }
+                        )
+                    }
+                }
+            }
 
             // Notes
             OutlinedTextField(

@@ -22,6 +22,7 @@ data class ItemFormState(
     val soldDate: LocalDate? = null,
     val purchaseLocation: String = "",
     val category: String = "",
+    val site: String = "",
     val notes: String = "",
     val imagePath: String? = null,
     val isEditing: Boolean = false,
@@ -76,6 +77,7 @@ class ItemDetailViewModel(private val repository: InventoryRepository) : ViewMod
                     soldDate = item.soldDate,
                     purchaseLocation = item.purchaseLocation,
                     category = item.category,
+                    site = item.site,
                     notes = item.notes,
                     imagePath = item.imagePath,
                     isEditing = true,
@@ -117,6 +119,10 @@ class ItemDetailViewModel(private val repository: InventoryRepository) : ViewMod
         _formState.value = _formState.value.copy(category = category)
     }
 
+    fun updateSite(site: String) {
+        _formState.value = _formState.value.copy(site = site)
+    }
+
     fun updateNotes(notes: String) {
         _formState.value = _formState.value.copy(notes = notes)
     }
@@ -140,6 +146,7 @@ class ItemDetailViewModel(private val repository: InventoryRepository) : ViewMod
                 scheduledPostDate = state.scheduledPostDate,
                 purchaseLocation = state.purchaseLocation,
                 category = state.category,
+                site = state.site,
                 notes = state.notes,
                 imagePath = state.imagePath
             )

@@ -23,12 +23,16 @@ import com.dustgatherer.app.ui.screens.analytics.AnalyticsScreen
 import com.dustgatherer.app.ui.screens.calendar.CalendarScreen
 import com.dustgatherer.app.ui.screens.inventory.InventoryScreen
 import com.dustgatherer.app.ui.screens.itemdetail.ItemDetailScreen
+import com.dustgatherer.app.ui.screens.settings.CategoryManagementScreen
 import com.dustgatherer.app.ui.screens.settings.SettingsScreen
+import com.dustgatherer.app.ui.screens.settings.SiteManagementScreen
 import com.dustgatherer.app.viewmodel.CalendarViewModel
+import com.dustgatherer.app.viewmodel.CategoryViewModel
 import com.dustgatherer.app.viewmodel.ImportExportViewModel
 import com.dustgatherer.app.viewmodel.InventoryViewModel
 import com.dustgatherer.app.viewmodel.ItemDetailViewModel
 import com.dustgatherer.app.viewmodel.SettingsViewModel
+import com.dustgatherer.app.viewmodel.SiteViewModel
 
 sealed class Screen(val route: String, val title: String, val icon: ImageVector?) {
     data object Inventory : Screen("inventory", "Inventory", Icons.Default.Inventory2)
@@ -38,6 +42,8 @@ sealed class Screen(val route: String, val title: String, val icon: ImageVector?
     data object ItemDetail : Screen("item/{itemId}", "Item", null) {
         fun createRoute(itemId: Long?) = "item/${itemId ?: 0}"
     }
+    data object CategoryManagement : Screen("settings/categories", "Categories", null)
+    data object SiteManagement : Screen("settings/sites", "Sites", null)
 }
 
 val bottomNavItems = listOf(
@@ -53,6 +59,8 @@ fun AppNavigation(
     itemDetailViewModel: ItemDetailViewModel,
     settingsViewModel: SettingsViewModel,
     importExportViewModel: ImportExportViewModel,
+    categoryViewModel: CategoryViewModel,
+    siteViewModel: SiteViewModel,
     onImageSelected: (Uri) -> String?,
     onCreateTempImageUri: () -> Pair<Uri, String> = { throw UnsupportedOperationException() }
 ) {
@@ -139,6 +147,8 @@ fun AppNavigation(
                 val itemId = backStackEntry.arguments?.getLong("itemId")
                 ItemDetailScreen(
                     viewModel = itemDetailViewModel,
+                    categoryViewModel = categoryViewModel,
+                    siteViewModel = siteViewModel,
                     itemId = if (itemId == 0L) null else itemId,
                     onNavigateBack = { navController.popBackStack() },
                     onImageSelected = onImageSelected,
@@ -150,6 +160,26 @@ fun AppNavigation(
                 SettingsScreen(
                     viewModel = settingsViewModel,
                     importExportViewModel = importExportViewModel,
+                    onNavigateBack = { navController.popBackStack() },
+                    onNavigateToCategories = {
+                        navController.navigate(Screen.CategoryManagement.route)
+                    },
+                    onNavigateToSites = {
+                        navController.navigate(Screen.SiteManagement.route)
+                    }
+                )
+            }
+
+            composable(Screen.CategoryManagement.route) {
+                CategoryManagementScreen(
+                    viewModel = categoryViewModel,
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
+
+            composable(Screen.SiteManagement.route) {
+                SiteManagementScreen(
+                    viewModel = siteViewModel,
                     onNavigateBack = { navController.popBackStack() }
                 )
             }

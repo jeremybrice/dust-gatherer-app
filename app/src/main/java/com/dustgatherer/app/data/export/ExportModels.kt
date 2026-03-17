@@ -13,7 +13,7 @@ data class ExportManifest(
     val itemCount: Int
 ) {
     companion object {
-        const val CURRENT_EXPORT_VERSION = 1
+        const val CURRENT_EXPORT_VERSION = 2
     }
 }
 
@@ -31,6 +31,7 @@ data class ExportInventoryItem(
     val imageFileName: String?,
     val purchaseLocation: String,
     val category: String,
+    val site: String = "",
     val notes: String,
     val createdAt: Long,
     val updatedAt: Long
@@ -52,6 +53,7 @@ data class ExportInventoryItem(
                 imageFileName = item.imagePath?.let { extractFileName(it) },
                 purchaseLocation = item.purchaseLocation,
                 category = item.category,
+                site = item.site,
                 notes = item.notes,
                 createdAt = item.createdAt,
                 updatedAt = item.updatedAt
@@ -77,6 +79,7 @@ data class ExportInventoryItem(
             imagePath = newImagePath,
             purchaseLocation = purchaseLocation,
             category = category,
+            site = site,
             notes = notes,
             createdAt = createdAt,
             updatedAt = updatedAt
@@ -87,7 +90,9 @@ data class ExportInventoryItem(
 @Serializable
 data class ExportData(
     val manifest: ExportManifest,
-    val items: List<ExportInventoryItem>
+    val items: List<ExportInventoryItem>,
+    val categories: List<String> = emptyList(),
+    val sites: List<String> = emptyList()
 )
 
 enum class ImportConflictStrategy {
