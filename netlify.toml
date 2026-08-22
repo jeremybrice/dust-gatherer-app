@@ -1,0 +1,15 @@
+# Netlify build configuration — pins the build so git-connected builds are
+# reproducible instead of relying on auto-detection.
+#
+# Security headers are set in src/middleware.ts, NOT here, because Netlify
+# applies framework/config headers AFTER middleware — headers declared here
+# would silently mask the middleware's. Do not add [[headers]] to this file.
+#
+# The Next.js runtime plugin manages the publish directory and the
+# serverless/edge functions automatically — do not set [build].publish.
+[build]
+  command = "next build"
+
+# Netlify installs this from npm at build time; no package.json dependency needed.
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
