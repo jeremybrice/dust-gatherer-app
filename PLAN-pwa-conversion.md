@@ -6,8 +6,9 @@ Replace the native Android app with an installable, OS-agnostic PWA hosted on Ne
 backed by Netlify DB (Neon Postgres), gated by a single passphrase held in a Netlify
 environment variable.
 
-The existing Android app stays in the repo and buildable until migration is complete —
-it is the only way to produce the export ZIP that seeds the new database.
+The Android app is retired as part of this work. It stays installed on the user's
+device and its database has already been exported, so the source tree does not need to
+remain buildable — the export ZIP that seeds the new database already exists.
 
 ## Decisions
 
@@ -16,7 +17,8 @@ it is the only way to produce the export ZIP that seeds the new database.
 | Offline support | **Installable only** — not offline-first | Server is the single source of truth. No IndexedDB, no sync queue, no tombstones. |
 | Platform | **PWA replaces Android**, must be OS-agnostic | iOS Safari is a first-class target, not an afterthought. |
 | Users | **Single user, always** | One passphrase in env. No user table, no per-row ownership, no data scoping. |
-| Existing data | **Must migrate** | Android export ZIP (v2) is the migration path, and stays supported permanently. |
+| Existing data | **Must migrate** | Android export ZIP (v2) already produced. It is the migration path, and stays supported permanently as the backup format. |
+| Android source | **Deleted in this work** | App is installed and data exported; the tree need not stay buildable. Next.js lives at the repo root. |
 
 ## Reference: product-almanac
 
@@ -45,26 +47,50 @@ Patterns we deliberately do **not** copy:
 
 ## Repository Layout
 
-The Next.js app goes in `web/`, with `base = "web"` in `netlify.toml`.
+The Next.js app lives at the **repo root** — no subdirectory, no `base` in `netlify.toml`.
 
-Rationale: the Android app must stay buildable throughout migration (it produces the
-export ZIP). A subdirectory keeps `build.gradle.kts` / `app/` untouched and lets us
-delete them in one clean commit once the data is moved.
+The Android tree is deleted in Step 1. Because the app is already installed on the
+device and its database already exported, there is nothing left that requires Gradle to
+run. Git history retains the source if it is ever needed.
 
 ```
-web/
-  src/app/          Next.js App Router
-  src/lib/          db, auth, schema, domain logic
-  src/components/
-  public/           manifest.webmanifest, sw.js, icons
-  netlify/database/migrations/
-netlify.toml        (repo root, base = "web")
-app/                Android — deleted after migration
+src/app/          Next.js App Router
+src/lib/          db, auth, schema, domain logic
+src/components/
+public/           manifest.webmanifest, sw.js, icons
+netlify/database/migrations/
+netlify.toml
 ```
+
+Note that Android's `app/` and Next.js's `src/app/` do not collide — almanac uses the
+same `src/app` convention.
 
 ---
 
-## Step 1: Database Schema
+## Step 1: Retire the Android Tree
+
+**Two assets must be extracted before anything is deleted**, because both live inside
+`app/`:
+
+| Asset | From | Needed for |
+|---|---|---|
+| `ic_launcher-playstore.png` (512x512 PNG) | `app/src/main/` | Source for every PWA icon size |
+| `strings.xml`, `values-uk/strings.xml` | `app/src/main/res/values*/` | The 110 EN/UK strings for i18n |
+
+Copy those to `public/icons/source.png` and `i18n/` first. Then remove:
+
+```
+app/  build.gradle.kts  settings.gradle.kts  gradle/  gradlew  gradlew.bat
+gradle.properties
+```
+
+Keep `dust-gfatherer-logo.jpg` (README) and `images/` (screenshots — also reusable as
+manifest `screenshots` entries for a richer install prompt). Rewrite `README.md` for
+the web stack.
+
+---
+
+## Step 2: Database Schema
 
 **File:** `web/src/lib/schema.ts`
 
@@ -124,7 +150,7 @@ The indexes mirror the DAO's actual query shapes (`getItemsScheduledBetween`,
 
 ---
 
-## Step 2: Authentication
+## Step 3: Authentication
 
 **Files:** `web/src/lib/auth.ts`, `web/src/middleware.ts`, `web/src/app/login/page.tsx`,
 `web/src/app/api/login/route.ts`
@@ -155,7 +181,7 @@ Two hardening points:
 
 ---
 
-## Step 3: Images
+## Step 4: Images
 
 The Android app captured via camera/gallery into a `FileProvider` path. The web
 equivalent:
@@ -183,7 +209,7 @@ around 200–400KB and makes the app usable on thrift-store LTE. Never send the 
 
 ---
 
-## Step 4: PWA Shell
+## Step 5: PWA Shell
 
 **Files:** `web/public/manifest.webmanifest`, `web/public/sw.js`, `web/src/app/layout.tsx`
 
@@ -211,11 +237,14 @@ iOS specifics, now that iOS is a real target:
 
 ---
 
-## Step 5: Data Migration (Android → PWA)
+## Step 6: Data Migration (Android → PWA)
 
 The requirement: export the current local Android database and reimport it into the new app.
 
-The export format already exists and is versioned — `DataExporter.exportToZip` writes:
+**The export has already been taken** from the installed Android app, so this step
+consumes an artifact that exists today rather than depending on the Android tree.
+
+The format is versioned — `DataExporter.exportToZip` wrote:
 
 ```
 inventory.json     ExportData { manifest, items[], categories[], sites[] }
@@ -239,13 +268,17 @@ exceed the function request-body limit. Doing it client-side sidesteps that enti
 6. Conflict strategy matched **by `id`**, porting `DataImporter.kt` exactly:
    `SKIP_EXISTING`, `REPLACE_EXISTING`, `IMPORT_AS_NEW`
 
+Since the target database starts empty, the first real import takes the
+`IMPORT_AS_NEW` path throughout. The other two strategies still matter afterwards, when
+restoring a PWA-produced backup over live data.
+
 **Export stays in the PWA and emits the identical v2 ZIP.** That keeps backups
 round-trippable, makes the migration reversible, and means import is a permanent
 feature rather than a one-time script.
 
 ---
 
-## Step 6: Screen Parity
+## Step 7: Screen Parity
 
 | Android | Web | Notes |
 |---|---|---|
@@ -264,16 +297,6 @@ DataStore.
 I18n: 110 strings in EN and UK. A build script converts `strings.xml` and
 `values-uk/strings.xml` into `en.json` / `uk.json`; a small dictionary provider replaces
 `stringResource`. `next-intl` is more machinery than one user and two languages needs.
-
----
-
-## Step 7: Decommission Android
-
-Only after the import has been verified against real data:
-
-- Delete `app/`, `build.gradle.kts`, `settings.gradle.kts`, `gradle/`, `gradlew*`
-- Rewrite `README.md` for the web stack
-- Move `web/` contents to the repo root and drop `base` from `netlify.toml`
 
 ---
 
@@ -304,11 +327,14 @@ instance.
 
 ## Build Order
 
-1. Scaffold `web/`, `netlify.toml`, Netlify DB + Drizzle schema, passphrase auth —
-   vertical slice: log in, see an empty item list
-2. Inventory list + Item Detail CRUD with image capture — the bulk of the work
-3. Calendar, Analytics, Settings, category/site management
-4. PWA layer: manifest, icons, service worker, install flow, iOS instructions
-5. Import/export: ZIP round-trip, then migrate the real database
-6. I18n pass (EN/UK)
-7. Decommission Android
+1. Extract the icon source and `strings.xml` files, delete the Android tree, scaffold
+   Next.js at the repo root with `netlify.toml`
+2. Netlify DB + Drizzle schema + passphrase auth — vertical slice: log in, see an empty
+   item list
+3. **Import the real export ZIP early**, right after CRUD reads work. Developing against
+   real inventory beats developing against seed data, and it de-risks the one step that
+   has no fallback.
+4. Inventory list + Item Detail CRUD with image capture — the bulk of the work
+5. Calendar, Analytics, Settings, category/site management
+6. PWA layer: manifest, icons, service worker, install flow, iOS instructions
+7. Export (v2 ZIP round-trip), then the i18n pass (EN/UK)
