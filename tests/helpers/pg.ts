@@ -1,6 +1,8 @@
 import { PGlite } from "@electric-sql/pglite";
+import { drizzle } from "drizzle-orm/pglite";
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
+import type { ImportDb } from "@/lib/importItems";
 
 const MIGRATIONS_DIR = "netlify/database/migrations";
 
@@ -23,4 +25,11 @@ export async function freshDb(): Promise<PGlite> {
     }
   }
   return db;
+}
+
+/** A drizzle instance over a migrated in-process Postgres, so tests exercise
+ *  the same query code that runs in production. */
+export async function freshDrizzle(): Promise<{ db: ImportDb; client: PGlite }> {
+  const client = await freshDb();
+  return { db: drizzle({ client }) as unknown as ImportDb, client };
 }
