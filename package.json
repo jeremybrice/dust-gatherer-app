@@ -1,0 +1,38 @@
+{
+  "name": "dust-gatherer",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 3210",
+    "build": "next build",
+    "start": "next start -p 3210",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "netlify database migrations apply"
+  },
+  "dependencies": {
+    "@netlify/blobs": "^11.0.1",
+    "@netlify/database": "^2.0.0",
+    "drizzle-orm": "1.0.0-rc.5-ab785fc",
+    "fflate": "0.8.3",
+    "jose": "^6.2.10",
+    "next": "^15.5.23",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.5.6",
+    "@types/node": "22.20.1",
+    "@types/react": "18.3.23",
+    "@types/react-dom": "18.3.7",
+    "drizzle-kit": "1.0.0-rc.5-ab785fc",
+    "typescript": "5.9.3",
+    "vitest": "^3.2.7"
+  },
+  "overrides": {
+    "postcss": "^8.5.26",
+    "sharp": "^0.35.3"
+  }
+}
