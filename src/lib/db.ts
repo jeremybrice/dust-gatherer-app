@@ -1,5 +1,4 @@
 import { drizzle } from "drizzle-orm/netlify-db";
-import * as schema from "@/lib/schema";
 
 // Module-scope DB client: constructed once, lazily, and reused across
 // invocations — never per request, which exhausts the connection limit.
@@ -8,7 +7,16 @@ import * as schema from "@/lib/schema";
 // database is unconfigured (unit tests, plain `next dev`, and the production
 // build itself, which runs without NETLIFY_DB_URL). Callers gate on
 // isDbConfigured() and surface a "not configured" state instead.
-const makeDb = () => drizzle({ schema });
+// drizzle-orm 1.0 dropped the `schema` option (DrizzlePgConfig is
+// Omit<DrizzleConfig, "schema">) — it belonged to the old relational-query API.
+// Queries here are built with db.select()/insert()/update(), which take their
+// table references directly, so nothing is lost. The connection is passed
+// explicitly because the adapter's overloads require it.
+const makeDb = () => {
+  const connection = process.env.NETLIFY_DB_URL;
+  if (!connection) throw new Error("NETLIFY_DB_URL is not configured");
+  return drizzle({ connection });
+};
 type Db = ReturnType<typeof makeDb>;
 let _db: Db | null = null;
 
