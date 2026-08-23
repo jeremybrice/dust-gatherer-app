@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { deriveProfit, deriveStatus } from "@/lib/itemStatus";
+import { applyStatusChange, deriveProfit, deriveStatus } from "@/lib/itemStatus";
 
 const dates = (o: Partial<Parameters<typeof deriveStatus>[0]> = {}) => ({
   scheduledPostDate: null, postedDate: null, soldDate: null, ...o,
@@ -42,5 +42,39 @@ describe("deriveProfit", () => {
     expect(deriveProfit({ purchasePrice: 10, sellingPrice: 25, soldDate: null })).toBeNull();
     expect(deriveProfit({ purchasePrice: 10, sellingPrice: null, soldDate: "2026-01-01" })).toBeNull();
     expect(deriveProfit({ purchasePrice: 10, sellingPrice: null, soldDate: null })).toBeNull();
+  });
+});
+
+describe("applyStatusChange", () => {
+  const today = "2026-08-23";
+
+  it("INVENTORY clears scheduled and posted dates", () => {
+    expect(
+      applyStatusChange("INVENTORY", { scheduledPostDate: "2026-08-01", postedDate: "2026-08-05" }, today),
+    ).toEqual({ scheduledPostDate: null, postedDate: null });
+  });
+
+  it("SCHEDULED keeps an existing scheduled date and clears posted", () => {
+    expect(
+      applyStatusChange("SCHEDULED", { scheduledPostDate: "2026-08-01", postedDate: "2026-08-05" }, today),
+    ).toEqual({ scheduledPostDate: "2026-08-01", postedDate: null });
+  });
+
+  it("SCHEDULED defaults a missing scheduled date to today", () => {
+    expect(
+      applyStatusChange("SCHEDULED", { scheduledPostDate: null, postedDate: null }, today),
+    ).toEqual({ scheduledPostDate: today, postedDate: null });
+  });
+
+  it("POSTED keeps an existing posted date", () => {
+    expect(
+      applyStatusChange("POSTED", { scheduledPostDate: "2026-08-01", postedDate: "2026-08-05" }, today),
+    ).toEqual({ scheduledPostDate: "2026-08-01", postedDate: "2026-08-05" });
+  });
+
+  it("POSTED defaults a missing posted date to today and keeps scheduled", () => {
+    expect(
+      applyStatusChange("POSTED", { scheduledPostDate: "2026-08-01", postedDate: null }, today),
+    ).toEqual({ scheduledPostDate: "2026-08-01", postedDate: today });
   });
 });
