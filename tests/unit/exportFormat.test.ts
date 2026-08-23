@@ -35,6 +35,39 @@ describe("parseExportData", () => {
     expect(data.items[0].site).toBe("");
   });
 
+  // kotlinx.serialization leaves encodeDefaults false, so the Android exporter
+  // omits every property equal to its declared default. ExportManifest.version
+  // defaults to CURRENT_EXPORT_VERSION and is therefore NEVER written — a real
+  // backup has no version field at all. Requiring it rejected every genuine
+  // archive with "Invalid input".
+  it("accepts a manifest with no version field, as the exporter actually writes it", () => {
+    const data = parseExportData({
+      manifest: { appVersion: "1.0", exportDate: "2026-08-01T10:00:00", itemCount: 1 },
+      items: [v2.items[0]],
+    });
+    expect(data.manifest.version).toBe(CURRENT_EXPORT_VERSION);
+    expect(data.items[0].title).toBe("Brass lamp");
+  });
+
+  // Same omission rule: an item with no site, and empty category/site lists.
+  it("accepts an archive with every defaulted field omitted", () => {
+    const { site, ...noSite } = v2.items[0];
+    const data = parseExportData({
+      manifest: { appVersion: "1.0", exportDate: "2026-08-01T10:00:00", itemCount: 1 },
+      items: [noSite],
+    });
+    expect(data.items[0].site).toBe("");
+    expect(data.categories).toEqual([]);
+    expect(data.sites).toEqual([]);
+  });
+
+  // A vague failure turns a one-line schema fix into a guessing game.
+  it("names the field that failed validation", () => {
+    expect(() => parseExportData({
+      manifest: {}, items: [{ ...v2.items[0], purchasePrice: "twelve" }],
+    })).toThrow(/items\.0\.purchasePrice/);
+  });
+
   // Dropping fields we do not understand would silently lose the user's data.
   it("refuses an archive from a newer app version", () => {
     expect(() => parseExportData({ ...v2, manifest: { version: CURRENT_EXPORT_VERSION + 1 } }))

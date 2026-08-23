@@ -14,8 +14,19 @@ export const CURRENT_EXPORT_VERSION = 2;
 /** ISO_LOCAL_DATE, as written by Kotlin's DateTimeFormatter.ISO_LOCAL_DATE. */
 const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "expected an ISO yyyy-MM-dd date");
 
+// `version` is OPTIONAL because the Android exporter never writes it.
+// ExportManifest declares `version: Int = CURRENT_EXPORT_VERSION`, and the
+// exporter's Json config leaves `encodeDefaults` at its default of false — so
+// kotlinx.serialization omits any property equal to its declared default, and
+// version is always exactly the default. An absent version therefore means
+// "whatever the writing exporter's current version was".
+//
+// Treating that as CURRENT_EXPORT_VERSION is correct for every archive this
+// app can encounter: a future exporter that bumps the version would also be a
+// future version of this codebase, and exports written HERE always emit the
+// field explicitly, so an absent version identifies an Android-written archive.
 export const exportManifestSchema = z.object({
-  version: z.number().int(),
+  version: z.number().int().default(CURRENT_EXPORT_VERSION),
   appVersion: z.string().optional(),
   exportDate: z.string().optional(),
   itemCount: z.number().int().optional(),
@@ -69,7 +80,14 @@ export class ExportFormatError extends Error {}
 export function parseExportData(json: unknown): ExportData {
   const parsed = exportDataSchema.safeParse(json);
   if (!parsed.success) {
-    throw new ExportFormatError(`Invalid backup file: ${parsed.error.issues[0]?.message ?? "unrecognised format"}`);
+    // Name the offending field. Without it the message is just "Invalid input",
+    // which says nothing about which of forty-odd fields disagreed and turns a
+    // one-line schema fix into a guessing game.
+    const issue = parsed.error.issues[0];
+    const where = issue?.path?.length ? ` at ${issue.path.join(".")}` : "";
+    throw new ExportFormatError(
+      `Invalid backup file${where}: ${issue?.message ?? "unrecognised format"}`,
+    );
   }
   if (parsed.data.manifest.version > CURRENT_EXPORT_VERSION) {
     throw new ExportFormatError(NEWER_VERSION_MESSAGE);
