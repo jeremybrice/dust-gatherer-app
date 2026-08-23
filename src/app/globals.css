@@ -98,3 +98,55 @@ header.app h1 { color: var(--burgundy); font-size: 1.5rem; margin: 0; }
   padding: 1rem; border: 1px dashed var(--border); border-radius: 12px;
   color: var(--text-muted); background: var(--surface);
 }
+
+/* Header nav */
+header.app .nav { display: flex; gap: 1rem; font-size: 0.9375rem; }
+
+/* Clickable inventory rows */
+a.item-link { text-decoration: none; color: inherit; display: block; }
+
+/* Item form */
+.form { display: flex; flex-direction: column; gap: 1rem; }
+.field { display: flex; flex-direction: column; gap: 0.25rem; }
+.field label { font-size: 0.875rem; color: var(--text-muted); }
+.field input, .field textarea, .field select {
+  padding: 0.75rem; font-size: 1rem; border: 1px solid var(--border);
+  border-radius: 8px; background: var(--surface); color: var(--text);
+  font-family: inherit;
+}
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+
+.photo-area {
+  width: 100%; height: 200px; border: 1px dashed var(--border); border-radius: 12px;
+  background: var(--surface); color: var(--text-muted); cursor: pointer;
+  display: flex; align-items: center; justify-content: center; overflow: hidden;
+  padding: 0; position: relative;
+}
+.photo-area img { width: 100%; height: 100%; object-fit: cover; }
+.photo-area .change-hint {
+  position: absolute; right: 0.5rem; bottom: 0.5rem; font-size: 0.75rem;
+  background: var(--surface); color: var(--text); padding: 0.25rem 0.5rem;
+  border-radius: 8px; opacity: 0.9;
+}
+
+.btn {
+  padding: 0.75rem 1rem; font-size: 1rem; border: 0; border-radius: 8px;
+  background: var(--burgundy); color: #fff; cursor: pointer;
+}
+.btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.btn-danger {
+  background: transparent; color: #B3261E; border: 1px solid #B3261E;
+}
+
+/* Mark as Sold dialog */
+.modal-backdrop {
+  position: fixed; inset: 0; background: rgba(0, 0, 0, 0.45);
+  display: flex; align-items: center; justify-content: center; padding: 1rem;
+  z-index: 10;
+}
+.modal {
+  background: var(--surface); border-radius: 12px; padding: 1.25rem;
+  width: 100%; max-width: 24rem; display: flex; flex-direction: column; gap: 0.75rem;
+}
+.modal h2 { margin: 0; font-size: 1.125rem; }
+.modal .actions { display: flex; justify-content: flex-end; gap: 0.5rem; }
