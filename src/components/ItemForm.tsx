@@ -25,6 +25,16 @@ function localToday(): string {
   return `${d.getFullYear()}-${mm}-${dd}`;
 }
 
+/** Strict decimal parse matching Kotlin's toDoubleOrNull: the whole trimmed
+ *  string must be a valid number, else null. parseFloat would accept "1,200"
+ *  as 1 and silently truncate a typed price. */
+function parsePrice(text: string): number | null {
+  const trimmed = text.trim();
+  if (trimmed === "") return null;
+  const n = Number(trimmed);
+  return Number.isFinite(n) ? n : null;
+}
+
 const money = (n: number) =>
   n.toLocaleString(undefined, { style: "currency", currency: "USD" });
 
@@ -76,7 +86,7 @@ export default function ItemForm({ item, categories, sites }: ItemFormProps) {
   const currentStatus = deriveStatus({ scheduledPostDate, postedDate, soldDate });
 
   const isValid =
-    title.trim().length > 0 && Number.isFinite(Number.parseFloat(purchasePrice));
+    title.trim().length > 0 && parsePrice(purchasePrice) !== null;
 
   function onPhotoChosen(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -118,13 +128,12 @@ export default function ItemForm({ item, categories, sites }: ItemFormProps) {
       }
 
       // Android silently treated an unparseable asking price as empty
-      // (sellingPrice.toDoubleOrNull()); matched here.
-      const asking = Number.parseFloat(sellingPrice);
+      // (sellingPrice.toDoubleOrNull()); parsePrice matches that exactly.
       const payload = {
         title: title.trim(),
         description,
-        purchasePrice: Number.parseFloat(purchasePrice),
-        sellingPrice: Number.isFinite(asking) ? asking : null,
+        purchasePrice: parsePrice(purchasePrice)!,
+        sellingPrice: parsePrice(sellingPrice),
         purchaseDate,
         scheduledPostDate,
         ...(editing ? { postedDate } : {}),
@@ -363,7 +372,7 @@ export default function ItemForm({ item, categories, sites }: ItemFormProps) {
       {showSoldDialog && item && (
         <MarkAsSoldDialog
           title={item.title}
-          purchasePrice={Number.parseFloat(purchasePrice) || item.purchasePrice}
+          purchasePrice={parsePrice(purchasePrice) ?? item.purchasePrice}
           initialPrice={sellingPrice}
           busy={busy}
           onCancel={() => setShowSoldDialog(false)}
@@ -392,9 +401,9 @@ function MarkAsSoldDialog({
   onConfirm: (price: number) => void;
 }) {
   const [priceText, setPriceText] = useState(initialPrice);
-  const price = Number.parseFloat(priceText);
-  const valid = Number.isFinite(price) && price > 0;
-  const profit = valid ? price - purchasePrice : null;
+  const price = parsePrice(priceText);
+  const valid = price !== null && price > 0;
+  const profit = valid ? price! - purchasePrice : null;
 
   return (
     <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label="Mark as sold">
@@ -424,7 +433,7 @@ function MarkAsSoldDialog({
           <button
             type="button"
             className="btn"
-            onClick={() => valid && onConfirm(price)}
+            onClick={() => valid && onConfirm(price!)}
             disabled={!valid || busy}
           >
             Confirm Sale
