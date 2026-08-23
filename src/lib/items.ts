@@ -43,13 +43,32 @@ function toView(row: typeof inventoryItems.$inferSelect): InventoryItemView {
   };
 }
 
-/** Newest first, matching InventoryDao.getAllItems(). Returns null when the
- *  database is unconfigured so callers can render a setup notice. */
-export async function listItems(): Promise<InventoryItemView[] | null> {
-  if (!isDbConfigured()) return null;
-  const rows = await getDb()
-    .select()
-    .from(inventoryItems)
-    .orderBy(desc(inventoryItems.createdAt));
-  return rows.map(toView);
+/**
+ * Newest first, matching InventoryDao.getAllItems().
+ *
+ * Returns a result rather than throwing: a database that is unreachable or
+ * misconfigured is an operational state the page should explain, not a stack
+ * trace behind an opaque "server-side exception" digest. The underlying error
+ * is logged for the function logs, where it is actually diagnosable.
+ */
+export type ItemsResult =
+  | { status: "ok"; items: InventoryItemView[] }
+  | { status: "unconfigured" }
+  | { status: "error"; message: string };
+
+export async function listItems(): Promise<ItemsResult> {
+  if (!isDbConfigured()) return { status: "unconfigured" };
+  try {
+    const rows = await getDb()
+      .select()
+      .from(inventoryItems)
+      .orderBy(desc(inventoryItems.createdAt));
+    return { status: "ok", items: rows.map(toView) };
+  } catch (err) {
+    console.error("listItems failed", err);
+    return {
+      status: "error",
+      message: err instanceof Error ? err.message : "Unknown database error",
+    };
+  }
 }
