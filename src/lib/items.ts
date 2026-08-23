@@ -1,4 +1,4 @@
-import { desc } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { getDb, isDbConfigured } from "@/lib/db";
 import { inventoryItems } from "@/lib/schema";
 import { deriveProfit, deriveStatus, type ItemStatus } from "@/lib/itemStatus";
@@ -71,4 +71,14 @@ export async function listItems(): Promise<ItemsResult> {
       message: err instanceof Error ? err.message : "Unknown database error",
     };
   }
+}
+
+/** One item by id, or null. Throws on database failure: the page boundary
+ *  converts that to notFound()/error UI, unlike the list which degrades. */
+export async function getItem(id: number): Promise<InventoryItemView | null> {
+  const rows = await getDb()
+    .select()
+    .from(inventoryItems)
+    .where(eq(inventoryItems.id, id));
+  return rows.length > 0 ? toView(rows[0]) : null;
 }
