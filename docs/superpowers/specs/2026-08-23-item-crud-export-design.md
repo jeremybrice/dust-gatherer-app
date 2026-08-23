@@ -122,8 +122,8 @@ holds by construction and is verified by test.
 - Blob deletion is new Blobs surface and only verifiable in production. Mitigation: deploy
   verification checklist, and deletion ordered after the database write so a blob failure
   cannot strand an item pointing at a missing image.
-- The export document must satisfy the importer's schema, which requires
-  `manifest.version`. Writing all fields explicitly, rather than imitating
-  kotlinx.serialization's omission of defaults, is deliberate and safe: the reader supplies
-  defaults for absent fields but accepts present ones, and the Android app that produced the
-  omitting form is retired.
+- The export document must satisfy the importer's schema. Writing all fields explicitly,
+  including `manifest.version`, rather than imitating kotlinx.serialization's omission of
+  defaults, is deliberate and safe: the reader supplies defaults for absent fields but
+  accepts present ones, and it uses an absent version specifically to identify an
+  Android-written archive, so exports written here must always emit the field.
