@@ -8,7 +8,7 @@ const money = (n: number) =>
 
 export default async function InventoryPage() {
   await requireSession();
-  const items = await listItems();
+  const result = await listItems();
 
   return (
     <div className="container">
@@ -17,19 +17,25 @@ export default async function InventoryPage() {
         <a href="/settings/import">Import</a>
       </header>
 
-      {items === null ? (
+      {result.status === "unconfigured" ? (
         <p className="notice">
           The database is not configured yet. Set <code>NETLIFY_DB_URL</code> and apply
           migrations, then reload.
         </p>
-      ) : items.length === 0 ? (
+      ) : result.status === "error" ? (
+        <p className="notice">
+          The inventory could not be loaded. The database reported:
+          <br />
+          <code>{result.message}</code>
+        </p>
+      ) : result.items.length === 0 ? (
         <p className="notice">
           No items yet. <a href="/settings/import">Import a backup</a> from the Android app
           to bring your inventory across.
         </p>
       ) : (
         <ul className="items">
-          {items.map((item) => (
+          {result.items.map((item) => (
             <li key={item.id} className="item">
               {item.imageKey ? (
                 // eslint-disable-next-line @next/next/no-img-element
