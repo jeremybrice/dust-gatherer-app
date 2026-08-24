@@ -8,3 +8,10 @@ out/
 .DS_Store
 *.tsbuildinfo
 coverage/
+
+# >>> relay >>>
+.session-log/
+# <<< relay <<<
+
+# Brainstorm visual companion mockups
+.superpowers/
