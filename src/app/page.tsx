@@ -1,24 +1,22 @@
 import { requireSession } from "@/lib/auth";
 import { listItems } from "@/lib/items";
-import { formatMoney as money } from "@/lib/money";
+import { parsePeriod } from "@/lib/inventoryStats";
+import AppShell from "@/components/AppShell";
+import HomeDashboard from "@/components/HomeDashboard";
 
 export const dynamic = "force-dynamic";
 
-export default async function InventoryPage() {
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ period?: string }>;
+}) {
   await requireSession();
+  const period = parsePeriod((await searchParams).period);
   const result = await listItems();
 
   return (
-    <div className="container">
-      <header className="app">
-        <h1>Dust Gatherer</h1>
-        <nav className="nav">
-          <a href="/items/new">Add item</a>
-          <a href="/settings/export">Export</a>
-          <a href="/settings/import">Import</a>
-        </nav>
-      </header>
-
+    <AppShell title="Home" active="home" addHref="/items/new">
       {result.status === "unconfigured" ? (
         <p className="notice">
           The database is not configured yet. Set <code>NETLIFY_DB_URL</code> and apply
@@ -30,38 +28,9 @@ export default async function InventoryPage() {
           <br />
           <code>{result.message}</code>
         </p>
-      ) : result.items.length === 0 ? (
-        <p className="notice">
-          No items yet. <a href="/items/new">Add your first item</a> or{" "}
-          <a href="/settings/import">import a backup</a> from the Android app.
-        </p>
       ) : (
-        <ul className="items">
-          {result.items.map((item) => (
-            <li key={item.id}>
-              <a className="item-link" href={`/items/${item.id}`}>
-                <div className="item">
-                  {item.imageKey ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={`/api/images/${item.imageKey}`} alt="" loading="lazy" />
-                  ) : (
-                    <div className="thumb-empty" />
-                  )}
-                  <div className="body">
-                    <h2>{item.title}</h2>
-                    <p className="meta">
-                      Paid {money(item.purchasePrice)}
-                      {item.profit !== null && <> · Profit {money(item.profit)}</>}
-                      {item.category && <> · {item.category}</>}
-                    </p>
-                  </div>
-                  <span className={`badge ${item.status}`}>{item.status}</span>
-                </div>
-              </a>
-            </li>
-          ))}
-        </ul>
+        <HomeDashboard items={result.items} period={period} />
       )}
-    </div>
+    </AppShell>
   );
 }
