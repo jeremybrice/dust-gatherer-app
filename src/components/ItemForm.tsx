@@ -347,7 +347,7 @@ export default function ItemForm({ item, categories, sites }: ItemFormProps) {
           <textarea id="notes" rows={4} value={notes} onChange={(e) => setNotes(e.target.value)} />
         </div>
 
-        {error && <p role="alert" className="error">{error}</p>}
+        {error && !showSoldDialog && <p role="alert" className="error">{error}</p>}
 
         <button type="button" className="btn" onClick={save} disabled={!isValid || busy}>
           {busy ? "Saving…" : "Save"}
@@ -357,7 +357,7 @@ export default function ItemForm({ item, categories, sites }: ItemFormProps) {
           <button
             type="button"
             className="btn"
-            onClick={() => setShowSoldDialog(true)}
+            onClick={() => { setError(null); setShowSoldDialog(true); }}
             disabled={busy}
           >
             Mark as Sold
