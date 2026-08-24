@@ -38,3 +38,34 @@ export function deriveProfit(item: {
   if (item.sellingPrice == null || item.soldDate == null) return null;
   return item.sellingPrice - item.purchasePrice;
 }
+
+/** Statuses the user can select directly; SOLD is only reachable through the
+ *  Mark as Sold flow, exactly as on Android. */
+export type SelectableStatus = Exclude<ItemStatus, "SOLD">;
+
+export interface MutableStatusDates {
+  scheduledPostDate: string | null;
+  postedDate: string | null;
+}
+
+/**
+ * Pure port of ItemDetailViewModel.changeStatus (git history before 46d7f5f).
+ * Runs client-side against the form's date fields, because the Android
+ * dropdown displayed the status derived live from those fields and selecting
+ * an option mutated them in place. `today` is the DEVICE's calendar date,
+ * supplied by the caller, so a server timezone can never shift the day.
+ */
+export function applyStatusChange(
+  requested: SelectableStatus,
+  current: MutableStatusDates,
+  today: string,
+): MutableStatusDates {
+  switch (requested) {
+    case "INVENTORY":
+      return { scheduledPostDate: null, postedDate: null };
+    case "SCHEDULED":
+      return { scheduledPostDate: current.scheduledPostDate ?? today, postedDate: null };
+    case "POSTED":
+      return { scheduledPostDate: current.scheduledPostDate, postedDate: current.postedDate ?? today };
+  }
+}
