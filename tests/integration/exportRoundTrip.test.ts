@@ -59,6 +59,7 @@ describe("export round trip", () => {
       const b = copies[i];
       expect(b.id).toBe(a.id);
       expect(b.title).toBe(a.title);
+      expect(b.description).toBe(a.description);
       expect(b.purchasePrice).toBe(a.purchasePrice);
       expect(b.sellingPrice).toBe(a.sellingPrice);
       expect(b.purchaseDate).toBe(a.purchaseDate);
@@ -66,10 +67,12 @@ describe("export round trip", () => {
       expect(b.postedDate).toBe(a.postedDate);
       expect(b.soldDate).toBe(a.soldDate);
       expect(b.imageKey).toBe(a.imageKey);
+      expect(b.purchaseLocation).toBe(a.purchaseLocation);
       expect(b.category).toBe(a.category);
       expect(b.site).toBe(a.site);
       expect(b.notes).toBe(a.notes);
       expect(b.createdAt.getTime()).toBe(a.createdAt.getTime());
+      expect(b.updatedAt.getTime()).toBe(a.updatedAt.getTime());
     }
   });
 });

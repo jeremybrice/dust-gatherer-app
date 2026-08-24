@@ -55,12 +55,14 @@ export async function runExport(
     try {
       const imgRes = await fetch(`/api/images/${image.imageKey}`);
       if (!imgRes.ok) throw new Error(`download failed (${imgRes.status})`);
+      const buf = await imgRes.arrayBuffer();
+      // A 200 with an empty body is still a failed download: a zero-byte ZIP
+      // entry gets silently filtered out by the importer, so this must count
+      // as an error or the backup would misreport its own completeness.
+      if (buf.byteLength === 0) throw new Error("download failed (empty body)");
       // Already JPEG-compressed; level 0 stores raw instead of wasting CPU
       // deflating for a near-zero size win.
-      files[`images/${image.fileName}`] = [
-        new Uint8Array(await imgRes.arrayBuffer()),
-        { level: 0 },
-      ];
+      files[`images/${image.fileName}`] = [new Uint8Array(buf), { level: 0 }];
     } catch (err) {
       errors.push(`${image.fileName}: ${err instanceof Error ? err.message : "failed"}`);
     }
@@ -75,8 +77,13 @@ export async function runExport(
   const a = document.createElement("a");
   a.href = url;
   a.download = fileName;
+  document.body.appendChild(a);
   a.click();
-  URL.revokeObjectURL(url);
+  a.remove();
+  // WebKit may not have started reading the blob by the time this function
+  // returns; revoking the object URL synchronously can abort the download
+  // while the panel above already reports success. Give it a minute.
+  setTimeout(() => URL.revokeObjectURL(url), 60_000);
 
   return {
     fileName,

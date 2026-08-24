@@ -63,7 +63,7 @@ export default function ExportPanel() {
           </ul>
           {result.errors.length > 0 && (
             <>
-              <p className="error">
+              <p role="alert" className="error">
                 {result.errors.length} photo{result.errors.length === 1 ? "" : "s"} could not
                 be downloaded and are missing from this backup. Do not rely on it for those
                 photos; try the export again.

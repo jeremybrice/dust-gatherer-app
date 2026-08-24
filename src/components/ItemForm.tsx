@@ -178,9 +178,11 @@ export default function ItemForm({ item, categories, sites }: ItemFormProps) {
       router.push("/");
       router.refresh();
     } catch (err) {
+      // Keep the dialog open on failure so the typed price is not lost and the
+      // error is visible where the user is looking, instead of rendering
+      // behind the still-open modal.
       setError(err instanceof Error ? err.message : "Could not record the sale.");
       setBusy(false);
-      setShowSoldDialog(false);
     }
   }
 
@@ -375,6 +377,7 @@ export default function ItemForm({ item, categories, sites }: ItemFormProps) {
           purchasePrice={parsePrice(purchasePrice) ?? item.purchasePrice}
           initialPrice={sellingPrice}
           busy={busy}
+          error={error}
           onCancel={() => setShowSoldDialog(false)}
           onConfirm={confirmSold}
         />
@@ -390,6 +393,7 @@ function MarkAsSoldDialog({
   purchasePrice,
   initialPrice,
   busy,
+  error,
   onCancel,
   onConfirm,
 }: {
@@ -397,6 +401,7 @@ function MarkAsSoldDialog({
   purchasePrice: number;
   initialPrice: string;
   busy: boolean;
+  error: string | null;
   onCancel: () => void;
   onConfirm: (price: number) => void;
 }) {
@@ -426,8 +431,15 @@ function MarkAsSoldDialog({
             Profit: {profit >= 0 ? "+" : ""}{money(profit)}
           </p>
         )}
+        {error && <p role="alert" className="error">{error}</p>}
         <div className="actions">
-          <button type="button" className="btn btn-danger" onClick={onCancel} disabled={busy}>
+          <button
+            type="button"
+            className="btn"
+            style={{ background: "transparent", color: "var(--text)", border: "1px solid var(--border)" }}
+            onClick={onCancel}
+            disabled={busy}
+          >
             Cancel
           </button>
           <button
