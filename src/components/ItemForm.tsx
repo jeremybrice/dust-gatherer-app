@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { localToday } from "@/lib/dates";
 import { downscaleImage } from "@/lib/imageResize";
 import {
   applyStatusChange,
@@ -9,21 +10,13 @@ import {
   type SelectableStatus,
 } from "@/lib/itemStatus";
 import type { InventoryItemView } from "@/lib/items";
+import { formatMoney as money } from "@/lib/money";
 
 const STATUS_LABELS: Record<SelectableStatus, string> = {
   INVENTORY: "In Stock",
   SCHEDULED: "Scheduled",
   POSTED: "Posted",
 };
-
-/** The DEVICE's calendar date. new Date().toISOString() would be UTC and
- *  shift the day for an evening entry; this stays in local time. */
-function localToday(): string {
-  const d = new Date();
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const dd = String(d.getDate()).padStart(2, "0");
-  return `${d.getFullYear()}-${mm}-${dd}`;
-}
 
 /** Strict decimal parse matching Kotlin's toDoubleOrNull: the whole trimmed
  *  string must be a valid number, else null. parseFloat would accept "1,200"
@@ -34,9 +27,6 @@ function parsePrice(text: string): number | null {
   const n = Number(trimmed);
   return Number.isFinite(n) ? n : null;
 }
-
-const money = (n: number) =>
-  n.toLocaleString(undefined, { style: "currency", currency: "USD" });
 
 interface ItemFormProps {
   item: InventoryItemView | null;
@@ -153,7 +143,7 @@ export default function ItemForm({ item, categories, sites }: ItemFormProps) {
         const detail = await res.json().catch(() => ({}));
         throw new Error(detail.error ?? `save failed (${res.status})`);
       }
-      router.push("/");
+      router.push("/inventory");
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not save the item.");
@@ -175,7 +165,7 @@ export default function ItemForm({ item, categories, sites }: ItemFormProps) {
         const detail = await res.json().catch(() => ({}));
         throw new Error(detail.error ?? `sale failed (${res.status})`);
       }
-      router.push("/");
+      router.push("/inventory");
       router.refresh();
     } catch (err) {
       // Keep the dialog open on failure so the typed price is not lost and the
@@ -194,7 +184,7 @@ export default function ItemForm({ item, categories, sites }: ItemFormProps) {
     try {
       const res = await fetch(`/api/items/${item.id}`, { method: "DELETE" });
       if (!res.ok) throw new Error(`delete failed (${res.status})`);
-      router.push("/");
+      router.push("/inventory");
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not delete the item.");
@@ -209,7 +199,7 @@ export default function ItemForm({ item, categories, sites }: ItemFormProps) {
       <header className="app">
         <h1>{editing ? "Edit item" : "Add item"}</h1>
         <nav className="nav">
-          <a href="/">Cancel</a>
+          <a href="/inventory">Cancel</a>
         </nav>
       </header>
 

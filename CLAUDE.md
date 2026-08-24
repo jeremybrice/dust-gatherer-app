@@ -19,38 +19,30 @@ Drizzle · Netlify Blobs for images · single passphrase in an env var, `jose` s
 The migration is done. **Production holds the real inventory — 208 items with photos** —
 imported from the Android backup and rendering with correct status badges and money.
 
-Working end to end: sign-in, the read-only inventory list, the database, image storage, and
-the import pipeline.
+Working end to end: sign-in, command-center Home (this-month profit, shelf
+value, posted-waiting, stale, oldest/recent strips), inventory search and
+filters, item CRUD with camera capture, settings hub, backup export, the
+database, image storage, and the import pipeline.
 
 Not built yet, roughly in intended order:
 
-1. **Item CRUD** with camera capture — the biggest remaining piece. `ItemDetailScreen.kt`
-   (648 lines, in git history) is the reference.
-2. **Export** — the v2 ZIP round-trip. See the backup warning below for why this should land
-   close behind CRUD rather than last.
-3. Calendar, Analytics, Settings, category/site management
-4. **The PWA shell itself** — manifest, icons, service worker, install flow. Despite the
-   project's framing, the app is not yet installable. `public/icons/source.png` is a 512×512
-   launcher icon kept for this.
-5. The EN/UK i18n pass — 110 strings preserved as raw Android XML in `i18n/android/`
-6. Bulk select — `PLAN-bulk-select.md` exists but was never implemented on Android either, so
-   it is not parity work
+1. Calendar / Schedule
+2. Category and site management UI
+3. The PWA shell itself — manifest, icons, service worker, install flow
+4. The EN/UK i18n pass
+5. Bulk select — never implemented on Android either
 
 Analytics must reproduce the **current** Android behaviour, which `PLAN.md` redesigned:
 `inventoryValue = totalSpent - COGS`, `salesProfit = totalRevenue - COGS`.
 
-## There is no backup path out of production yet
+## Backups exist but only when you run them
 
-The database holds data that exists nowhere else once it changes. The Android export ZIP
-covers the inventory *as imported*, and the Android app is retired, so it can never be
-refreshed. Until export ships, anything created or edited in this app is unbacked.
+Export now ships from `/settings/export` as a v2 ZIP the app's own importer accepts. The risk
+is now discipline, not capability: anything changed since the last export is still unbacked,
+and `netlify database reset` still destroys everything since that export.
 
-Two consequences worth holding onto:
-
-- **`netlify database reset` destroys the inventory.** It sits in the CLI's own examples list
-  next to harmless commands.
-- Build export alongside item CRUD, not after the remaining screens. The moment editing works,
-  the ZIP stops describing reality.
+**`netlify database reset` destroys the inventory.** It sits in the CLI's own examples list
+next to harmless commands.
 
 ## Commands
 

@@ -19,18 +19,18 @@ Drizzle · Netlify Blobs for images · single passphrase in an env var, `jose` s
 The migration is done. **Production holds the real inventory — 208 items with photos** —
 imported from the Android backup and rendering with correct status badges and money.
 
-Working end to end: sign-in, the inventory list, item CRUD with camera capture, the backup
-export, the database, image storage, and the import pipeline.
+Working end to end: sign-in, command-center Home (this-month profit, shelf
+value, posted-waiting, stale, oldest/recent strips), inventory search and
+filters, item CRUD with camera capture, settings hub, backup export, the
+database, image storage, and the import pipeline.
 
 Not built yet, roughly in intended order:
 
-1. Calendar, Analytics, Settings, category/site management
-2. **The PWA shell itself** — manifest, icons, service worker, install flow. Despite the
-   project's framing, the app is not yet installable. `public/icons/source.png` is a 512×512
-   launcher icon kept for this.
-3. The EN/UK i18n pass — 110 strings preserved as raw Android XML in `i18n/android/`
-4. Bulk select — `PLAN-bulk-select.md` exists but was never implemented on Android either, so
-   it is not parity work
+1. Calendar / Schedule
+2. Category and site management UI
+3. The PWA shell itself — manifest, icons, service worker, install flow
+4. The EN/UK i18n pass
+5. Bulk select — never implemented on Android either
 
 Analytics must reproduce the **current** Android behaviour, which `PLAN.md` redesigned:
 `inventoryValue = totalSpent - COGS`, `salesProfit = totalRevenue - COGS`.

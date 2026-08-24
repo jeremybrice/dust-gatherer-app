@@ -1,22 +1,22 @@
 import { requireSession } from "@/lib/auth";
 import { listItems } from "@/lib/items";
-import { parsePeriod } from "@/lib/inventoryStats";
+import { parseFilter, parseSort } from "@/lib/inventoryStats";
 import AppShell from "@/components/AppShell";
-import HomeDashboard from "@/components/HomeDashboard";
+import InventoryList from "@/components/InventoryList";
 
 export const dynamic = "force-dynamic";
 
-export default async function HomePage({
+export default async function InventoryPage({
   searchParams,
 }: {
-  searchParams: Promise<{ period?: string }>;
+  searchParams: Promise<{ filter?: string; sort?: string; q?: string }>;
 }) {
   await requireSession();
-  const period = parsePeriod((await searchParams).period);
+  const sp = await searchParams;
   const result = await listItems();
 
   return (
-    <AppShell title="Home" active="home" addHref="/items/new">
+    <AppShell title="Inventory" active="inventory" addHref="/items/new">
       {result.status === "unconfigured" ? (
         <p className="notice">
           The database is not configured yet. Set <code>NETLIFY_DB_URL</code> and apply
@@ -29,7 +29,12 @@ export default async function HomePage({
           <code>{result.message}</code>
         </p>
       ) : (
-        <HomeDashboard items={result.items} period={period} />
+        <InventoryList
+          items={result.items}
+          filter={parseFilter(sp.filter)}
+          sort={parseSort(sp.sort)}
+          q={sp.q ?? ""}
+        />
       )}
     </AppShell>
   );

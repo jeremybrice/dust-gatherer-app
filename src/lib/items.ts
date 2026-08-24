@@ -18,6 +18,7 @@ export interface InventoryItemView {
   category: string;
   site: string;
   notes: string;
+  createdAt: string;
   status: ItemStatus;
   profit: number | null;
 }
@@ -38,6 +39,7 @@ function toView(row: typeof inventoryItems.$inferSelect): InventoryItemView {
     category: row.category,
     site: row.site,
     notes: row.notes,
+    createdAt: row.createdAt.toISOString(),
     status: deriveStatus(row),
     profit: deriveProfit(row),
   };

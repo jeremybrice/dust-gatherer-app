@@ -55,7 +55,7 @@ export default function ImportWizard() {
     <div className="container">
       <header className="app">
         <h1>Import a backup</h1>
-        <a href="/">Back</a>
+        <a href="/settings">Back</a>
       </header>
 
       <p className="notice">
@@ -123,7 +123,7 @@ export default function ImportWizard() {
               <ul>{result.errors.map((e) => <li key={e}>{e}</li>)}</ul>
             </>
           )}
-          <p><a href="/">View your inventory</a></p>
+          <p><a href="/inventory">View your inventory</a></p>
         </>
       )}
     </div>
