@@ -15,3 +15,6 @@ coverage/
 
 # Brainstorm visual companion mockups
 .superpowers/
+
+# Local git worktrees
+.worktrees/
