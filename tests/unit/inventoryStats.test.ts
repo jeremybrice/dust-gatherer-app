@@ -1,7 +1,17 @@
 import { describe, it, expect } from "vitest";
 import { deriveProfit, deriveStatus } from "@/lib/itemStatus";
 import type { InventoryItemView } from "@/lib/items";
-import { STALE_AFTER_DAYS, statsFor } from "@/lib/inventoryStats";
+import {
+  FILTER_LABELS,
+  STALE_AFTER_DAYS,
+  filterItems,
+  inventoryHref,
+  parseFilter,
+  parsePeriod,
+  parseSort,
+  statsFor,
+  type InventoryFilter,
+} from "@/lib/inventoryStats";
 
 function view(
   over: Partial<InventoryItemView> & { id: number; title: string },
@@ -19,6 +29,7 @@ function view(
     category: "",
     site: "",
     notes: "",
+    createdAt: "2026-08-01T00:00:00.000Z",
     status: "INVENTORY",
     profit: null,
     ...over,
@@ -152,5 +163,86 @@ describe("statsFor", () => {
     expect(s.soldThisMonth.map((i) => i.title)).toEqual([
       "sale-late-high", "sale-late-low", "sale-mid",
     ]);
+  });
+});
+
+describe("parse helpers", () => {
+  it("defaults unknown filter/sort/period", () => {
+    expect(parseFilter(undefined)).toBe("all");
+    expect(parseFilter("nope")).toBe("all");
+    expect(parseFilter("stale")).toBe("stale");
+    expect(parseSort(undefined)).toBe("newest");
+    expect(parseSort("oldest")).toBe("oldest");
+    expect(parsePeriod(undefined)).toBe("month");
+    expect(parsePeriod("all")).toBe("all");
+  });
+});
+
+describe("inventoryHref", () => {
+  it("omits default query params", () => {
+    expect(inventoryHref({})).toBe("/inventory");
+    expect(inventoryHref({ filter: "all", sort: "newest" })).toBe("/inventory");
+    expect(inventoryHref({ filter: "stale" })).toBe("/inventory?filter=stale");
+    expect(inventoryHref({ filter: "unsold", sort: "oldest" })).toBe(
+      "/inventory?filter=unsold&sort=oldest",
+    );
+    expect(inventoryHref({ q: "bowl" })).toBe("/inventory?q=bowl");
+  });
+});
+
+describe("filterItems", () => {
+  const items = [
+    view({ id: 1, title: "Pyrex bowl", purchaseDate: "2026-01-01", createdAt: "2026-08-20T00:00:00.000Z" }),
+    view({ id: 2, title: "Wool coat", postedDate: "2026-08-01", purchaseDate: "2026-06-01", createdAt: "2026-08-19T00:00:00.000Z" }),
+    view({
+      id: 3, title: "Jadeite mug", purchasePrice: 5, sellingPrice: 28,
+      soldDate: "2026-08-12", purchaseDate: "2026-07-01",
+      createdAt: "2026-08-18T00:00:00.000Z",
+    }),
+    view({
+      id: 4, title: "Brass lamp", scheduledPostDate: "2026-08-30",
+      purchaseDate: "2026-06-24", createdAt: "2026-08-17T00:00:00.000Z",
+    }),
+    view({
+      id: 5, title: "July sale", purchasePrice: 4, sellingPrice: 10,
+      soldDate: "2026-07-04", createdAt: "2026-07-04T00:00:00.000Z",
+    }),
+  ];
+
+  const opts = (filter: InventoryFilter, extra: { sort?: "newest" | "oldest"; q?: string } = {}) =>
+    ({ filter, sort: extra.sort ?? "newest", q: extra.q ?? "", today: TODAY });
+
+  it("filters each named set", () => {
+    expect(filterItems(items, opts("unsold")).map((i) => i.id).sort()).toEqual([1, 2, 4]);
+    expect(filterItems(items, opts("posted")).map((i) => i.id)).toEqual([2]);
+    expect(filterItems(items, opts("stale")).map((i) => i.id).sort()).toEqual([1, 2, 4]);
+    expect(filterItems(items, opts("sold-month")).map((i) => i.id)).toEqual([3]);
+    expect(filterItems(items, opts("sold")).map((i) => i.id).sort()).toEqual([3, 5]);
+    expect(filterItems(items, opts("in-stock")).map((i) => i.id)).toEqual([1]);
+    expect(filterItems(items, opts("scheduled")).map((i) => i.id)).toEqual([4]);
+  });
+
+  it("ANDs a case-insensitive title substring with the filter", () => {
+    expect(filterItems(items, opts("unsold", { q: "WOOL" })).map((i) => i.id)).toEqual([2]);
+    expect(filterItems(items, opts("unsold", { q: "nope" }))).toEqual([]);
+  });
+
+  it("sorts oldest by purchaseDate then id", () => {
+    expect(
+      filterItems(items, opts("unsold", { sort: "oldest" })).map((i) => i.title),
+    ).toEqual(["Pyrex bowl", "Wool coat", "Brass lamp"]);
+  });
+
+  it("sorts newest by createdAt then id", () => {
+    expect(
+      filterItems(items, opts("all", { sort: "newest" })).map((i) => i.id),
+    ).toEqual([1, 2, 3, 4, 5]);
+  });
+});
+
+describe("FILTER_LABELS", () => {
+  it("names sold-month distinctly", () => {
+    expect(FILTER_LABELS["sold-month"]).toBe("Sold this month");
+    expect(FILTER_LABELS.stale).toBe("Stale");
   });
 });

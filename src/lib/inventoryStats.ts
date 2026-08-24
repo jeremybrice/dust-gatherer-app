@@ -78,3 +78,88 @@ export function statsFor(items: InventoryItemView[], today: string): InventorySt
     soldAllTime: [...sold].sort(bySoldRecent).slice(0, 3),
   };
 }
+
+export type InventoryFilter =
+  | "all"
+  | "in-stock"
+  | "scheduled"
+  | "posted"
+  | "sold"
+  | "sold-month"
+  | "unsold"
+  | "stale";
+
+export type InventorySort = "newest" | "oldest";
+export type HomePeriod = "month" | "all";
+
+const FILTERS: InventoryFilter[] = [
+  "all", "in-stock", "scheduled", "posted", "sold", "sold-month", "unsold", "stale",
+];
+
+export const FILTER_LABELS: Record<InventoryFilter, string> = {
+  all: "All items",
+  "in-stock": "In stock",
+  scheduled: "Scheduled",
+  posted: "Posted",
+  sold: "Sold",
+  "sold-month": "Sold this month",
+  unsold: "On the shelf",
+  stale: "Stale",
+};
+
+export function parseFilter(raw: string | null | undefined): InventoryFilter {
+  return FILTERS.includes(raw as InventoryFilter) ? (raw as InventoryFilter) : "all";
+}
+
+export function parseSort(raw: string | null | undefined): InventorySort {
+  return raw === "oldest" ? "oldest" : "newest";
+}
+
+export function parsePeriod(raw: string | null | undefined): HomePeriod {
+  return raw === "all" ? "all" : "month";
+}
+
+export function inventoryHref(opts: {
+  filter?: InventoryFilter;
+  sort?: InventorySort;
+  q?: string;
+}): string {
+  const p = new URLSearchParams();
+  if (opts.filter && opts.filter !== "all") p.set("filter", opts.filter);
+  if (opts.sort && opts.sort !== "newest") p.set("sort", opts.sort);
+  const q = opts.q?.trim() ?? "";
+  if (q) p.set("q", q);
+  const s = p.toString();
+  return s ? `/inventory?${s}` : "/inventory";
+}
+
+export function filterItems(
+  items: InventoryItemView[],
+  opts: { filter: InventoryFilter; sort: InventorySort; q: string; today: string },
+): InventoryItemView[] {
+  const needle = opts.q.trim().toLowerCase();
+  const matched = items.filter((item) => {
+    if (needle && !item.title.toLowerCase().includes(needle)) return false;
+    switch (opts.filter) {
+      case "all": return true;
+      case "in-stock": return deriveStatus(item) === "INVENTORY";
+      case "scheduled": return deriveStatus(item) === "SCHEDULED";
+      case "posted": return deriveStatus(item) === "POSTED";
+      case "sold": return item.soldDate != null;
+      case "sold-month":
+        return item.soldDate != null && sameMonth(item.soldDate, opts.today);
+      case "unsold": return item.soldDate == null;
+      case "stale": return isStale(item, opts.today);
+    }
+  });
+  const sorted = [...matched];
+  if (opts.sort === "oldest") {
+    sorted.sort(byOldest);
+  } else {
+    sorted.sort((a, b) => {
+      if (a.createdAt !== b.createdAt) return a.createdAt < b.createdAt ? 1 : -1;
+      return b.id - a.id;
+    });
+  }
+  return sorted;
+}
