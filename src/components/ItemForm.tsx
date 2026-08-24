@@ -143,7 +143,7 @@ export default function ItemForm({ item, categories, sites }: ItemFormProps) {
         const detail = await res.json().catch(() => ({}));
         throw new Error(detail.error ?? `save failed (${res.status})`);
       }
-      router.push("/");
+      router.push("/inventory");
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not save the item.");
@@ -165,7 +165,7 @@ export default function ItemForm({ item, categories, sites }: ItemFormProps) {
         const detail = await res.json().catch(() => ({}));
         throw new Error(detail.error ?? `sale failed (${res.status})`);
       }
-      router.push("/");
+      router.push("/inventory");
       router.refresh();
     } catch (err) {
       // Keep the dialog open on failure so the typed price is not lost and the
@@ -184,7 +184,7 @@ export default function ItemForm({ item, categories, sites }: ItemFormProps) {
     try {
       const res = await fetch(`/api/items/${item.id}`, { method: "DELETE" });
       if (!res.ok) throw new Error(`delete failed (${res.status})`);
-      router.push("/");
+      router.push("/inventory");
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not delete the item.");
@@ -199,7 +199,7 @@ export default function ItemForm({ item, categories, sites }: ItemFormProps) {
       <header className="app">
         <h1>{editing ? "Edit item" : "Add item"}</h1>
         <nav className="nav">
-          <a href="/">Cancel</a>
+          <a href="/inventory">Cancel</a>
         </nav>
       </header>
 
