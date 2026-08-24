@@ -1,10 +1,8 @@
 import { requireSession } from "@/lib/auth";
 import { listItems } from "@/lib/items";
+import { formatMoney as money } from "@/lib/money";
 
 export const dynamic = "force-dynamic";
-
-const money = (n: number) =>
-  n.toLocaleString(undefined, { style: "currency", currency: "USD" });
 
 export default async function InventoryPage() {
   await requireSession();

@@ -10,6 +10,7 @@ import {
   type SelectableStatus,
 } from "@/lib/itemStatus";
 import type { InventoryItemView } from "@/lib/items";
+import { formatMoney as money } from "@/lib/money";
 
 const STATUS_LABELS: Record<SelectableStatus, string> = {
   INVENTORY: "In Stock",
@@ -26,9 +27,6 @@ function parsePrice(text: string): number | null {
   const n = Number(trimmed);
   return Number.isFinite(n) ? n : null;
 }
-
-const money = (n: number) =>
-  n.toLocaleString(undefined, { style: "currency", currency: "USD" });
 
 interface ItemFormProps {
   item: InventoryItemView | null;
