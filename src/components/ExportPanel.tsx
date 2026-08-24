@@ -28,7 +28,7 @@ export default function ExportPanel() {
       <header className="app">
         <h1>Download a backup</h1>
         <nav className="nav">
-          <a href="/">Back</a>
+          <a href="/settings">Back</a>
         </nav>
       </header>
 
