@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { localToday } from "@/lib/dates";
 import { downscaleImage } from "@/lib/imageResize";
 import {
   applyStatusChange,
@@ -15,15 +16,6 @@ const STATUS_LABELS: Record<SelectableStatus, string> = {
   SCHEDULED: "Scheduled",
   POSTED: "Posted",
 };
-
-/** The DEVICE's calendar date. new Date().toISOString() would be UTC and
- *  shift the day for an evening entry; this stays in local time. */
-function localToday(): string {
-  const d = new Date();
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const dd = String(d.getDate()).padStart(2, "0");
-  return `${d.getFullYear()}-${mm}-${dd}`;
-}
 
 /** Strict decimal parse matching Kotlin's toDoubleOrNull: the whole trimmed
  *  string must be a valid number, else null. parseFloat would accept "1,200"
