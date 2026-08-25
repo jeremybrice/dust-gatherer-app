@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { deriveProfit, deriveStatus } from "@/lib/itemStatus";
 import type { InventoryItemView } from "@/lib/items";
 import {
-  FILTER_LABELS,
+  FILTER_KEYS,
   STALE_AFTER_DAYS,
   filterItems,
   inventoryHref,
@@ -240,9 +240,9 @@ describe("filterItems", () => {
   });
 });
 
-describe("FILTER_LABELS", () => {
+describe("FILTER_KEYS", () => {
   it("names sold-month distinctly", () => {
-    expect(FILTER_LABELS["sold-month"]).toBe("Sold this month");
-    expect(FILTER_LABELS.stale).toBe("Stale");
+    expect(FILTER_KEYS["sold-month"]).toBe("sold_this_month");
+    expect(FILTER_KEYS.stale).toBe("stale");
   });
 });
