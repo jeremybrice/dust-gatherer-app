@@ -1,7 +1,7 @@
 # PWA install + EN/UK i18n design
 
 Date: 2026-08-24
-Status: awaiting review
+Status: approved
 
 ## Purpose
 
