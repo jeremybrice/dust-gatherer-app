@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { useT } from "@/components/I18nProvider";
 import { runExport, type ExportProgress, type ExportResult } from "@/lib/exportClient";
 
 export default function ExportPanel() {
+  const { t } = useT();
   const [progress, setProgress] = useState<ExportProgress | null>(null);
   const [result, setResult] = useState<ExportResult | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -16,7 +18,7 @@ export default function ExportPanel() {
     try {
       setResult(await runExport(setProgress));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Export failed.");
+      setError(err instanceof Error ? err.message : t("export_failed"));
     } finally {
       setBusy(false);
       setProgress(null);
@@ -26,29 +28,27 @@ export default function ExportPanel() {
   return (
     <div className="container">
       <header className="app">
-        <h1>Download a backup</h1>
+        <h1>{t("export_heading")}</h1>
         <nav className="nav">
-          <a href="/settings">Back</a>
+          <a href="/settings">{t("back")}</a>
         </nav>
       </header>
 
       <p className="notice">
-        Downloads a <code>.zip</code> of your whole inventory, photos included, in the same
-        format the Android app used. Re-importing it restores everything exactly. This is
-        currently the only copy of your data outside the database, so export regularly.
+        {t("export_notice")}
       </p>
 
       <p>
         <button type="button" className="btn" onClick={onExport} disabled={busy}>
-          {busy ? "Exporting…" : "Download backup"}
+          {busy ? t("exporting") : t("download_backup")}
         </button>
       </p>
 
       {progress && (
         <p aria-live="polite">
           {progress.phase === "photos"
-            ? `Downloading photos: ${progress.completed} of ${progress.total}`
-            : "Building the archive…"}
+            ? t("export_photos_progress", { "1": progress.completed, "2": progress.total })
+            : t("export_building")}
         </p>
       )}
 
@@ -56,17 +56,15 @@ export default function ExportPanel() {
 
       {result && (
         <>
-          <h2>Backup saved</h2>
+          <h2>{t("export_saved")}</h2>
           <ul>
             <li>{result.fileName}</li>
-            <li>{result.itemCount} items, {result.photoCount} photos</li>
+            <li>{t("export_counts", { "1": result.itemCount, "2": result.photoCount })}</li>
           </ul>
           {result.errors.length > 0 && (
             <>
               <p role="alert" className="error">
-                {result.errors.length} photo{result.errors.length === 1 ? "" : "s"} could not
-                be downloaded and are missing from this backup. Do not rely on it for those
-                photos; try the export again.
+                {t("export_photo_errors", { "1": result.errors.length })}
               </p>
               <ul>{result.errors.map((e) => <li key={e}>{e}</li>)}</ul>
             </>

@@ -2,7 +2,9 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useT } from "@/components/I18nProvider";
 import { localToday } from "@/lib/dates";
+import type { Lang } from "@/lib/i18n";
 import { downscaleImage } from "@/lib/imageResize";
 import {
   applyStatusChange,
@@ -10,12 +12,12 @@ import {
   type SelectableStatus,
 } from "@/lib/itemStatus";
 import type { InventoryItemView } from "@/lib/items";
-import { formatMoney as money } from "@/lib/money";
+import { formatMoney } from "@/lib/money";
 
-const STATUS_LABELS: Record<SelectableStatus, string> = {
-  INVENTORY: "In Stock",
-  SCHEDULED: "Scheduled",
-  POSTED: "Posted",
+const STATUS_KEYS: Record<SelectableStatus, string> = {
+  INVENTORY: "status_in_stock",
+  SCHEDULED: "status_scheduled",
+  POSTED: "status_posted",
 };
 
 /** Strict decimal parse matching Kotlin's toDoubleOrNull: the whole trimmed
@@ -34,7 +36,10 @@ interface ItemFormProps {
   sites: string[];
 }
 
+type TFn = (key: string, vars?: Record<string, string | number>) => string;
+
 export default function ItemForm({ item, categories, sites }: ItemFormProps) {
+  const { lang, t } = useT();
   const router = useRouter();
   const editing = item !== null;
 
@@ -146,7 +151,7 @@ export default function ItemForm({ item, categories, sites }: ItemFormProps) {
       router.push("/inventory");
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not save the item.");
+      setError(err instanceof Error ? err.message : t("save_failed"));
       setBusy(false);
     }
   }
@@ -171,14 +176,14 @@ export default function ItemForm({ item, categories, sites }: ItemFormProps) {
       // Keep the dialog open on failure so the typed price is not lost and the
       // error is visible where the user is looking, instead of rendering
       // behind the still-open modal.
-      setError(err instanceof Error ? err.message : "Could not record the sale.");
+      setError(err instanceof Error ? err.message : t("sale_failed"));
       setBusy(false);
     }
   }
 
   async function onDelete() {
     if (!editing) return;
-    if (!window.confirm("Delete this item? This cannot be undone.")) return;
+    if (!window.confirm(t("delete_item_confirm_message"))) return;
     setBusy(true);
     setError(null);
     try {
@@ -187,7 +192,7 @@ export default function ItemForm({ item, categories, sites }: ItemFormProps) {
       router.push("/inventory");
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not delete the item.");
+      setError(err instanceof Error ? err.message : t("delete_failed"));
       setBusy(false);
     }
   }
@@ -197,9 +202,9 @@ export default function ItemForm({ item, categories, sites }: ItemFormProps) {
   return (
     <div className="container">
       <header className="app">
-        <h1>{editing ? "Edit item" : "Add item"}</h1>
+        <h1>{t(editing ? "edit_item" : "add_item")}</h1>
         <nav className="nav">
-          <a href="/inventory">Cancel</a>
+          <a href="/inventory">{t("cancel")}</a>
         </nav>
       </header>
 
@@ -213,11 +218,11 @@ export default function ItemForm({ item, categories, sites }: ItemFormProps) {
           {photoSrc ? (
             <>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={photoSrc} alt="Item photo" />
-              <span className="change-hint">Change</span>
+              <img src={photoSrc} alt={t("item_image")} />
+              <span className="change-hint">{t("change")}</span>
             </>
           ) : (
-            <span>Tap to add a photo</span>
+            <span>{t("tap_to_add_photo")}</span>
           )}
         </button>
         <input
@@ -229,12 +234,12 @@ export default function ItemForm({ item, categories, sites }: ItemFormProps) {
         />
 
         <div className="field">
-          <label htmlFor="title">Title (required)</label>
+          <label htmlFor="title">{t("title_required")}</label>
           <input id="title" value={title} onChange={(e) => setTitle(e.target.value)} />
         </div>
 
         <div className="field">
-          <label htmlFor="description">Description</label>
+          <label htmlFor="description">{t("description")}</label>
           <textarea
             id="description"
             rows={3}
@@ -245,7 +250,7 @@ export default function ItemForm({ item, categories, sites }: ItemFormProps) {
 
         <div className="row2">
           <div className="field">
-            <label htmlFor="purchasePrice">Purchase price $ (required)</label>
+            <label htmlFor="purchasePrice">{t("purchase_price_required")}</label>
             <input
               id="purchasePrice"
               inputMode="decimal"
@@ -254,7 +259,7 @@ export default function ItemForm({ item, categories, sites }: ItemFormProps) {
             />
           </div>
           <div className="field">
-            <label htmlFor="sellingPrice">Asking price $</label>
+            <label htmlFor="sellingPrice">{t("asking_price_label")}</label>
             <input
               id="sellingPrice"
               inputMode="decimal"
@@ -265,7 +270,7 @@ export default function ItemForm({ item, categories, sites }: ItemFormProps) {
         </div>
 
         <div className="field">
-          <label htmlFor="purchaseDate">Purchase date</label>
+          <label htmlFor="purchaseDate">{t("purchase_date")}</label>
           <input
             id="purchaseDate"
             type="date"
@@ -275,7 +280,7 @@ export default function ItemForm({ item, categories, sites }: ItemFormProps) {
         </div>
 
         <div className="field">
-          <label htmlFor="scheduledPostDate">Scheduled post date</label>
+          <label htmlFor="scheduledPostDate">{t("scheduled_post_date")}</label>
           <input
             id="scheduledPostDate"
             type="date"
@@ -286,14 +291,14 @@ export default function ItemForm({ item, categories, sites }: ItemFormProps) {
 
         {editing && !isSold && (
           <div className="field">
-            <label htmlFor="status">Status</label>
+            <label htmlFor="status">{t("status")}</label>
             <select
               id="status"
               value={currentStatus}
               onChange={(e) => onStatusChange(e.target.value as SelectableStatus)}
             >
-              {(Object.keys(STATUS_LABELS) as SelectableStatus[]).map((s) => (
-                <option key={s} value={s}>{STATUS_LABELS[s]}</option>
+              {(Object.keys(STATUS_KEYS) as SelectableStatus[]).map((s) => (
+                <option key={s} value={s}>{t(STATUS_KEYS[s])}</option>
               ))}
             </select>
           </div>
@@ -301,13 +306,13 @@ export default function ItemForm({ item, categories, sites }: ItemFormProps) {
 
         {isSold && (
           <p className="notice">
-            Sold on {soldDate}
-            {item?.profit != null && <> · Profit {money(item.profit)}</>}
+            {t("sold_on", { "1": soldDate })}
+            {item?.profit != null && <> · {t("profit", { "1": formatMoney(item.profit, lang) })}</>}
           </p>
         )}
 
         <div className="field">
-          <label htmlFor="purchaseLocation">Purchase location</label>
+          <label htmlFor="purchaseLocation">{t("purchase_location")}</label>
           <input
             id="purchaseLocation"
             value={purchaseLocation}
@@ -317,14 +322,14 @@ export default function ItemForm({ item, categories, sites }: ItemFormProps) {
 
         <div className="row2">
           <div className="field">
-            <label htmlFor="category">Category</label>
+            <label htmlFor="category">{t("category")}</label>
             <select id="category" value={category} onChange={(e) => setCategory(e.target.value)}>
               <option value=""></option>
               {categories.map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
           <div className="field">
-            <label htmlFor="site">Site</label>
+            <label htmlFor="site">{t("site")}</label>
             <select id="site" value={site} onChange={(e) => setSite(e.target.value)}>
               <option value=""></option>
               {sites.map((s) => <option key={s} value={s}>{s}</option>)}
@@ -333,14 +338,14 @@ export default function ItemForm({ item, categories, sites }: ItemFormProps) {
         </div>
 
         <div className="field">
-          <label htmlFor="notes">Notes</label>
+          <label htmlFor="notes">{t("notes")}</label>
           <textarea id="notes" rows={4} value={notes} onChange={(e) => setNotes(e.target.value)} />
         </div>
 
         {error && !showSoldDialog && <p role="alert" className="error">{error}</p>}
 
         <button type="button" className="btn" onClick={save} disabled={!isValid || busy}>
-          {busy ? "Saving…" : "Save"}
+          {busy ? t("saving") : t("save")}
         </button>
 
         {editing && !isSold && (
@@ -350,13 +355,13 @@ export default function ItemForm({ item, categories, sites }: ItemFormProps) {
             onClick={() => { setError(null); setShowSoldDialog(true); }}
             disabled={busy}
           >
-            Mark as Sold
+            {t("mark_as_sold")}
           </button>
         )}
 
         {editing && (
           <button type="button" className="btn btn-danger" onClick={onDelete} disabled={busy}>
-            Delete item
+            {t("delete_item")}
           </button>
         )}
       </div>
@@ -368,6 +373,8 @@ export default function ItemForm({ item, categories, sites }: ItemFormProps) {
           initialPrice={sellingPrice}
           busy={busy}
           error={error}
+          lang={lang}
+          t={t}
           onCancel={() => setShowSoldDialog(false)}
           onConfirm={confirmSold}
         />
@@ -384,6 +391,8 @@ function MarkAsSoldDialog({
   initialPrice,
   busy,
   error,
+  lang,
+  t,
   onCancel,
   onConfirm,
 }: {
@@ -392,6 +401,8 @@ function MarkAsSoldDialog({
   initialPrice: string;
   busy: boolean;
   error: string | null;
+  lang: Lang;
+  t: TFn;
   onCancel: () => void;
   onConfirm: (price: number) => void;
 }) {
@@ -401,13 +412,13 @@ function MarkAsSoldDialog({
   const profit = valid ? price! - purchasePrice : null;
 
   return (
-    <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label="Mark as sold">
+    <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label={t("mark_as_sold")}>
       <div className="modal">
-        <h2>Mark as Sold</h2>
+        <h2>{t("mark_as_sold")}</h2>
         <p style={{ margin: 0 }}>{title}</p>
-        <p style={{ margin: 0 }} className="meta">Bought for {money(purchasePrice)}</p>
+        <p style={{ margin: 0 }} className="meta">{t("bought_for", { "1": formatMoney(purchasePrice, lang) })}</p>
         <div className="field">
-          <label htmlFor="finalPrice">Final sale price $</label>
+          <label htmlFor="finalPrice">{t("final_sale_price")}</label>
           <input
             id="finalPrice"
             inputMode="decimal"
@@ -418,7 +429,7 @@ function MarkAsSoldDialog({
         </div>
         {profit !== null && (
           <p style={{ margin: 0 }}>
-            Profit: {profit >= 0 ? "+" : ""}{money(profit)}
+            {t("profit", { "1": `${profit >= 0 ? "+" : ""}${formatMoney(profit, lang)}` })}
           </p>
         )}
         {error && <p role="alert" className="error">{error}</p>}
@@ -430,7 +441,7 @@ function MarkAsSoldDialog({
             onClick={onCancel}
             disabled={busy}
           >
-            Cancel
+            {t("cancel")}
           </button>
           <button
             type="button"
@@ -438,7 +449,7 @@ function MarkAsSoldDialog({
             onClick={() => valid && onConfirm(price!)}
             disabled={!valid || busy}
           >
-            Confirm Sale
+            {t("confirm_sale")}
           </button>
         </div>
       </div>
