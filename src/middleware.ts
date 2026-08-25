@@ -12,7 +12,7 @@ import {
 
 // Public paths. The PWA assets MUST stay public: a redirected /sw.js fails
 // service-worker registration, which silently makes the app non-installable.
-const PUBLIC = [
+export const PUBLIC = [
   /^\/login$/,
   /^\/api\/login$/,
   /^\/api\/logout$/,
@@ -22,7 +22,9 @@ const PUBLIC = [
   /^\/icons\//,
 ];
 
-const isPublic = (path: string) => PUBLIC.some((re) => re.test(path));
+export function isPublicPath(path: string): boolean {
+  return PUBLIC.some((re) => re.test(path));
+}
 
 export async function middleware(req: NextRequest) {
   const { pathname, search } = req.nextUrl;
@@ -31,7 +33,7 @@ export async function middleware(req: NextRequest) {
   const claims = await verifySession(token, secret);
 
   const res = ((): NextResponse => {
-    if (isPublic(pathname)) return NextResponse.next();
+    if (isPublicPath(pathname)) return NextResponse.next();
     if (!claims) {
       // API callers get a 401; a redirect to an HTML login page would be
       // unparseable to fetch() and mask the real cause.
@@ -66,6 +68,10 @@ export async function middleware(req: NextRequest) {
     "Strict-Transport-Security",
     "max-age=63072000; includeSubDomains; preload",
   );
+  if (pathname === "/sw.js") {
+    res.headers.set("Cache-Control", "no-cache");
+    res.headers.set("Service-Worker-Allowed", "/");
+  }
   return res;
 }
 

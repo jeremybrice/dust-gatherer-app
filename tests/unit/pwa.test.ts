@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { readFileSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
+import { isPublicPath } from "@/middleware";
 
 const root = fileURLToPath(new URL("../..", import.meta.url));
 
@@ -46,5 +47,31 @@ describe("manifest.webmanifest", () => {
     ]) {
       expect(existsSync(path.join(root, "public", rel)), rel).toBe(true);
     }
+  });
+});
+
+describe("service worker", () => {
+  it("has a fetch handler and never cache.puts /api/", () => {
+    const sw = readPublic("sw.js");
+    expect(sw).toMatch(/addEventListener\(\s*["']fetch["']/);
+    expect(sw).toMatch(/skipWaiting/);
+    expect(sw).toMatch(/clients\.claim/);
+    const puts = [...sw.matchAll(/cache\.put\s*\(([^)]*)\)/g)].map((m) => m[1]);
+    for (const args of puts) {
+      expect(args.includes("/api/")).toBe(false);
+    }
+    expect(sw).not.toMatch(/pathname\.startsWith\(\s*["']\/api\/["']\s*\)[\s\S]{0,200}cache\.put/);
+  });
+});
+
+describe("isPublicPath", () => {
+  it("keeps PWA assets off the auth redirect", () => {
+    expect(isPublicPath("/manifest.webmanifest")).toBe(true);
+    expect(isPublicPath("/sw.js")).toBe(true);
+    expect(isPublicPath("/offline")).toBe(true);
+    expect(isPublicPath("/icons/icon-192.png")).toBe(true);
+    expect(isPublicPath("/login")).toBe(true);
+    expect(isPublicPath("/inventory")).toBe(false);
+    expect(isPublicPath("/api/items")).toBe(false);
   });
 });
