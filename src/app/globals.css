@@ -281,3 +281,13 @@ a.item-link { text-decoration: none; color: inherit; display: block; }
 }
 .settings-links h2 { font-size: 1rem; margin: 0 0 0.15rem; color: var(--burgundy); }
 .settings-links p { margin: 0; font-size: 0.8125rem; color: var(--text-muted); }
+
+.settings-block { margin: 0 0 1.25rem; }
+.settings-block h2 {
+  font-size: 1rem; margin: 0 0 0.5rem; color: var(--burgundy);
+}
+.radio-row {
+  display: flex; align-items: center; gap: 0.6rem;
+  padding: 0.65rem 0; cursor: pointer;
+}
+.install-steps { margin: 0.25rem 0 0; padding-left: 1.25rem; }
