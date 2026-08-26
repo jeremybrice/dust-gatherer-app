@@ -28,3 +28,10 @@ describe("monthLabel", () => {
     expect(monthLabel("2026-03-01")).toBe("March");
   });
 });
+
+describe("monthLabel locale", () => {
+  it("names August in Ukrainian when asked", () => {
+    expect(monthLabel("2026-08-24", "uk")).not.toBe("August");
+    expect(monthLabel("2026-08-24", "uk").toLowerCase()).toContain("серп");
+  });
+});

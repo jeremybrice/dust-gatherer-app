@@ -1,3 +1,6 @@
+import type { Lang } from "@/lib/i18n";
+import { localeFor } from "@/lib/money";
+
 /** The DEVICE's calendar date. `new Date().toISOString()` is UTC and
  *  would shift the day for an evening entry. */
 export function localToday(): string {
@@ -21,9 +24,9 @@ export function sameMonth(ymd: string, today: string): boolean {
   return ymd.slice(0, 7) === today.slice(0, 7);
 }
 
-export function monthLabel(today: string): string {
+export function monthLabel(today: string, lang: Lang = "en"): string {
   const [y, m] = today.split("-").map(Number);
-  return new Date(Date.UTC(y, m - 1, 1)).toLocaleString("en-US", {
+  return new Date(Date.UTC(y, m - 1, 1)).toLocaleString(localeFor(lang), {
     month: "long",
     timeZone: "UTC",
   });

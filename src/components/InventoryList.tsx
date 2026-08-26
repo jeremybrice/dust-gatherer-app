@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useT } from "@/components/I18nProvider";
 import { localToday } from "@/lib/dates";
 import {
-  FILTER_LABELS,
+  FILTER_KEYS,
   filterItems,
   inventoryHref,
   type InventoryFilter,
@@ -13,14 +14,21 @@ import {
 import type { InventoryItemView } from "@/lib/items";
 import { formatMoney } from "@/lib/money";
 
-const CHIPS: { filter: InventoryFilter; label: string }[] = [
-  { filter: "all", label: "All" },
-  { filter: "in-stock", label: "In stock" },
-  { filter: "scheduled", label: "Scheduled" },
-  { filter: "posted", label: "Posted" },
-  { filter: "sold", label: "Sold" },
-  { filter: "unsold", label: "Unsold" },
-  { filter: "stale", label: "Stale" },
+const STATUS_KEYS = {
+  INVENTORY: "status_in_stock",
+  SCHEDULED: "status_scheduled",
+  POSTED: "status_posted",
+  SOLD: "status_sold",
+} as const;
+
+const CHIPS: { filter: InventoryFilter; key: string }[] = [
+  { filter: "all", key: "chip_all" },
+  { filter: "in-stock", key: "chip_in_stock" },
+  { filter: "scheduled", key: "chip_scheduled" },
+  { filter: "posted", key: "chip_posted" },
+  { filter: "sold", key: "chip_sold" },
+  { filter: "unsold", key: "chip_unsold" },
+  { filter: "stale", key: "chip_stale" },
 ];
 
 export default function InventoryList({
@@ -34,6 +42,7 @@ export default function InventoryList({
   sort: InventorySort;
   q: string;
 }) {
+  const { lang, t } = useT();
   const router = useRouter();
   const [text, setText] = useState(q);
   const visible = filterItems(items, { filter, sort, q, today: localToday() });
@@ -53,7 +62,7 @@ export default function InventoryList({
         <input
           className="search"
           value={text}
-          placeholder="Search items…"
+          placeholder={t("search_items")}
           onChange={(e) => setText(e.target.value)}
           onBlur={() => {
             if (text !== q) commitSearch(text);
@@ -73,24 +82,21 @@ export default function InventoryList({
               href={inventoryHref({ filter: chip.filter, q: text })}
               className={on ? "on" : undefined}
             >
-              {chip.label}
+              {t(chip.key)}
             </a>
           );
         })}
       </div>
 
       <h2 style={{ fontSize: "1rem", margin: "0 0 0.75rem" }}>
-        {FILTER_LABELS[filter]} · {visible.length}
+        {t(FILTER_KEYS[filter])} · {visible.length}
       </h2>
 
       {items.length === 0 ? (
-        <p className="notice">
-          No items yet. <a href="/items/new">Add your first item</a> or{" "}
-          <a href="/settings/import">import a backup</a>.
-        </p>
+        <p className="notice">{t("no_items_yet")} <a href="/items/new">{t("add_first_item")}</a> · <a href="/settings/import">{t("import_a_backup")}</a></p>
       ) : visible.length === 0 ? (
         <p className="notice">
-          No items match. <a href="/inventory">Clear</a>
+          {t("no_items_match")} <a href="/inventory">{t("clear")}</a>
         </p>
       ) : (
         <ul className="items">
@@ -107,12 +113,12 @@ export default function InventoryList({
                   <div className="body">
                     <h2>{item.title}</h2>
                     <p className="meta">
-                      Paid {formatMoney(item.purchasePrice)}
-                      {item.profit !== null && <> · Profit {formatMoney(item.profit)}</>}
+                      {t("paid", { "1": formatMoney(item.purchasePrice, lang) })}
+                      {item.profit !== null && <> · {t("profit", { "1": formatMoney(item.profit, lang) })}</>}
                       {item.category && <> · {item.category}</>}
                     </p>
                   </div>
-                  <span className={`badge ${item.status}`}>{item.status}</span>
+                  <span className={`badge ${item.status}`}>{t(STATUS_KEYS[item.status])}</span>
                 </div>
               </a>
             </li>

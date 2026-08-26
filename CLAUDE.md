@@ -22,15 +22,15 @@ imported from the Android backup and rendering with correct status badges and mo
 Working end to end: sign-in, command-center Home (this-month profit, shelf
 value, posted-waiting, stale, oldest/recent strips), inventory search and
 filters, item CRUD with camera capture, settings hub, backup export, the
-database, image storage, and the import pipeline.
+database, image storage, and the import pipeline. Also: installable PWA
+(manifest, icons, service worker, Settings install instructions) and
+English / Українська via Settings (cookie `dg-lang`).
 
 Not built yet, roughly in intended order:
 
 1. Calendar / Schedule
 2. Category and site management UI
-3. The PWA shell itself — manifest, icons, service worker, install flow
-4. The EN/UK i18n pass
-5. Bulk select — never implemented on Android either
+3. Bulk select — never implemented on Android either
 
 Analytics must reproduce the **current** Android behaviour, which `PLAN.md` redesigned:
 `inventoryValue = totalSpent - COGS`, `salesProfit = totalRevenue - COGS`.

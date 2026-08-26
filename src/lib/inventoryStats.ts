@@ -96,15 +96,15 @@ const FILTERS: InventoryFilter[] = [
   "all", "in-stock", "scheduled", "posted", "sold", "sold-month", "unsold", "stale",
 ];
 
-export const FILTER_LABELS: Record<InventoryFilter, string> = {
-  all: "All items",
-  "in-stock": "In stock",
-  scheduled: "Scheduled",
-  posted: "Posted",
-  sold: "Sold",
-  "sold-month": "Sold this month",
-  unsold: "On the shelf",
-  stale: "Stale",
+export const FILTER_KEYS: Record<InventoryFilter, string> = {
+  all: "filter_all",
+  "in-stock": "chip_in_stock",
+  scheduled: "chip_scheduled",
+  posted: "chip_posted",
+  sold: "chip_sold",
+  "sold-month": "sold_this_month",
+  unsold: "on_the_shelf",
+  stale: "stale",
 };
 
 export function parseFilter(raw: string | null | undefined): InventoryFilter {

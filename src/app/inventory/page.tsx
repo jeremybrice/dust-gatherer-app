@@ -1,6 +1,8 @@
+import { cookies } from "next/headers";
 import { requireSession } from "@/lib/auth";
 import { listItems } from "@/lib/items";
 import { parseFilter, parseSort } from "@/lib/inventoryStats";
+import { LANG_COOKIE, parseLang, t } from "@/lib/i18n";
 import AppShell from "@/components/AppShell";
 import InventoryList from "@/components/InventoryList";
 
@@ -12,19 +14,17 @@ export default async function InventoryPage({
   searchParams: Promise<{ filter?: string; sort?: string; q?: string }>;
 }) {
   await requireSession();
+  const lang = parseLang((await cookies()).get(LANG_COOKIE)?.value);
   const sp = await searchParams;
   const result = await listItems();
 
   return (
-    <AppShell title="Inventory" active="inventory" addHref="/items/new">
+    <AppShell title={t(lang, "inventory")} active="inventory" addHref="/items/new">
       {result.status === "unconfigured" ? (
-        <p className="notice">
-          The database is not configured yet. Set <code>NETLIFY_DB_URL</code> and apply
-          migrations, then reload.
-        </p>
+        <p className="notice">{t(lang, "db_unconfigured")}</p>
       ) : result.status === "error" ? (
         <p className="notice">
-          The inventory could not be loaded. The database reported:
+          {t(lang, "load_error")}
           <br />
           <code>{result.message}</code>
         </p>

@@ -1,5 +1,6 @@
 "use client";
 
+import { useT } from "@/components/I18nProvider";
 import { daysSitting, localToday, monthLabel } from "@/lib/dates";
 import {
   STALE_AFTER_DAYS,
@@ -10,8 +11,8 @@ import {
 import type { InventoryItemView } from "@/lib/items";
 import { formatMoney } from "@/lib/money";
 
-function profitText(n: number): string {
-  return n >= 0 ? `+${formatMoney(n)}` : formatMoney(n);
+function profitText(n: number, money: (n: number) => string): string {
+  return n >= 0 ? `+${money(n)}` : money(n);
 }
 
 export default function HomeDashboard({
@@ -21,6 +22,8 @@ export default function HomeDashboard({
   items: InventoryItemView[];
   period: HomePeriod;
 }) {
+  const { lang, t } = useT();
+  const money = (n: number) => formatMoney(n, lang);
   const today = localToday();
   const stats = statsFor(items, today);
   const flow = period === "all" ? stats.allTime : stats.thisMonth;
@@ -28,7 +31,7 @@ export default function HomeDashboard({
   const soldHref = inventoryHref({
     filter: period === "all" ? "sold" : "sold-month",
   });
-  const month = monthLabel(today);
+  const month = monthLabel(today, lang);
 
   return (
     <>
@@ -36,11 +39,11 @@ export default function HomeDashboard({
         {period === "month" ? (
           <>
             <strong>{month}</strong>
-            <a href="/?period=all">All-time →</a>
+            <a href="/?period=all">{t("all_time")} →</a>
           </>
         ) : (
           <>
-            <strong>All-time</strong>
+            <strong>{t("all_time")}</strong>
             <a href="/">{month} →</a>
           </>
         )}
@@ -49,44 +52,41 @@ export default function HomeDashboard({
       <div className="stats">
         <a className="stat profit wide" href={soldHref}>
           <div className="k">
-            {period === "all" ? "Sales profit" : "Sales profit this month"}
+            {period === "all" ? t("sales_profit") : t("sales_profit_this_month")}
           </div>
-          <div className="v">{profitText(flow.profit)}</div>
+          <div className="v">{profitText(flow.profit, money)}</div>
           <div className="s">
-            {formatMoney(flow.revenue)} revenue
-            {flow.margin != null && <> · {Math.round(flow.margin * 100)}% margin</>}
-            {" · "}{flow.soldCount} sold
+            {money(flow.revenue)} {t("revenue")}
+            {flow.margin != null && <> · {t("margin_percent", { "1": Math.round(flow.margin * 100) })}</>}
+            {" · "}{t("sold_count", { "1": flow.soldCount })}
           </div>
         </a>
         <a className="stat" href={inventoryHref({ filter: "unsold" })}>
-          <div className="k">On the shelf</div>
-          <div className="v">{formatMoney(stats.shelfValue)}</div>
-          <div className="s">{stats.unsoldCount} unsold</div>
+          <div className="k">{t("on_the_shelf")}</div>
+          <div className="v">{money(stats.shelfValue)}</div>
+          <div className="s">{t("unsold_count", { "1": stats.unsoldCount })}</div>
         </a>
         <a className="stat" href={inventoryHref({ filter: "posted" })}>
-          <div className="k">Posted, waiting</div>
+          <div className="k">{t("posted_waiting")}</div>
           <div className="v">{stats.postedWaiting}</div>
-          <div className="s">listed, not sold</div>
+          <div className="s">{t("listed_not_sold")}</div>
         </a>
         <a className="stat warn wide" href={inventoryHref({ filter: "stale" })}>
-          <div className="k">Stale &gt; {STALE_AFTER_DAYS} days</div>
+          <div className="k">{t("stale_gt_days", { "1": STALE_AFTER_DAYS })}</div>
           <div className="v">{stats.staleCount}</div>
-          <div className="s">&gt; {STALE_AFTER_DAYS} days</div>
+          <div className="s">{t("gt_days", { "1": STALE_AFTER_DAYS })}</div>
         </a>
       </div>
 
       {items.length === 0 && (
-        <p className="notice">
-          No items yet. <a href="/items/new">Add your first item</a> or{" "}
-          <a href="/settings/import">import a backup</a>.
-        </p>
+        <p className="notice">{t("no_items_yet")} <a href="/items/new">{t("add_first_item")}</a> · <a href="/settings/import">{t("import_a_backup")}</a></p>
       )}
 
       {stats.oldestUnsold.length > 0 && (
         <section>
           <div className="strip-head">
-            <h2>Oldest on the shelf</h2>
-            <a href={inventoryHref({ filter: "unsold", sort: "oldest" })}>See all</a>
+            <h2>{t("oldest_on_the_shelf")}</h2>
+            <a href={inventoryHref({ filter: "unsold", sort: "oldest" })}>{t("see_all")}</a>
           </div>
           <ul className="items">
             {stats.oldestUnsold.map((item) => (
@@ -102,11 +102,11 @@ export default function HomeDashboard({
                     <div className="body">
                       <h2>{item.title}</h2>
                       <p className="meta">
-                        {daysSitting(item.purchaseDate, today)} days · paid {formatMoney(item.purchasePrice)}
+                        {t("days_paid", { "1": daysSitting(item.purchaseDate, today), "2": money(item.purchasePrice) })}
                       </p>
                     </div>
                     {daysSitting(item.purchaseDate, today) > STALE_AFTER_DAYS && (
-                      <span className="chip">stale</span>
+                      <span className="chip">{t("stale")}</span>
                     )}
                   </div>
                 </a>
@@ -119,8 +119,8 @@ export default function HomeDashboard({
       {soldStrip.length > 0 && (
         <section>
           <div className="strip-head">
-            <h2>{period === "all" ? "Recently sold" : "Sold this month"}</h2>
-            <a href={soldHref}>See all</a>
+            <h2>{period === "all" ? t("recently_sold") : t("sold_this_month")}</h2>
+            <a href={soldHref}>{t("see_all")}</a>
           </div>
           <ul className="items">
             {soldStrip.map((item) => (
@@ -136,8 +136,7 @@ export default function HomeDashboard({
                     <div className="body">
                       <h2>{item.title}</h2>
                       <p className="meta">
-                        Sold {formatMoney(item.sellingPrice ?? 0)}
-                        {item.profit != null && <> · Profit {formatMoney(item.profit)}</>}
+                        {t("sold_profit", { "1": money(item.sellingPrice ?? 0), "2": money(item.profit ?? 0) })}
                       </p>
                     </div>
                   </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useT } from "@/components/I18nProvider";
 import {
   parseArchive,
   runImport,
@@ -10,13 +11,14 @@ import {
 } from "@/lib/importClient";
 import { IMPORT_STRATEGIES, type ImportStrategy } from "@/lib/importMapping";
 
-const STRATEGY_LABELS: Record<ImportStrategy, string> = {
-  IMPORT_AS_NEW: "Add everything as new items",
-  SKIP_EXISTING: "Skip items that already exist",
-  REPLACE_EXISTING: "Replace items that already exist",
+const STRATEGY_KEYS: Record<ImportStrategy, string> = {
+  IMPORT_AS_NEW: "import_as_new",
+  SKIP_EXISTING: "import_skip_existing",
+  REPLACE_EXISTING: "import_replace_existing",
 };
 
 export default function ImportWizard() {
+  const { t } = useT();
   const [archive, setArchive] = useState<ParsedArchive | null>(null);
   const [strategy, setStrategy] = useState<ImportStrategy>("IMPORT_AS_NEW");
   const [progress, setProgress] = useState<ImportProgress | null>(null);
@@ -33,7 +35,7 @@ export default function ImportWizard() {
     try {
       setArchive(await parseArchive(file));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not read that file.");
+      setError(err instanceof Error ? err.message : t("file_read_error"));
     }
   }
 
@@ -44,7 +46,7 @@ export default function ImportWizard() {
     try {
       setResult(await runImport(archive, strategy, setProgress));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Import failed.");
+      setError(err instanceof Error ? err.message : t("import_failed"));
     } finally {
       setBusy(false);
       setProgress(null);
@@ -54,14 +56,12 @@ export default function ImportWizard() {
   return (
     <div className="container">
       <header className="app">
-        <h1>Import a backup</h1>
-        <a href="/settings">Back</a>
+        <h1>{t("import_heading")}</h1>
+        <a href="/settings">{t("back")}</a>
       </header>
 
       <p className="notice">
-        Choose the <code>.zip</code> exported from the Dust Gatherer Android app. The archive
-        is unpacked in your browser and photos are resized before upload, so large backups
-        work over a slow connection.
+        {t("import_notice")}
       </p>
 
       <p>
@@ -72,15 +72,15 @@ export default function ImportWizard() {
 
       {archive && !result && (
         <>
-          <h2>Ready to import</h2>
+          <h2>{t("import_ready")}</h2>
           <ul>
-            <li>{archive.data.items.length} items</li>
-            <li>{archive.images.size} photos</li>
-            <li>{archive.data.categories.length} categories, {archive.data.sites.length} sites</li>
-            <li>Backup format version {archive.data.manifest.version}</li>
+            <li>{t("import_items", { "1": archive.data.items.length })}</li>
+            <li>{t("import_photos", { "1": archive.images.size })}</li>
+            <li>{t("import_taxonomy", { "1": archive.data.categories.length, "2": archive.data.sites.length })}</li>
+            <li>{t("import_version", { "1": archive.data.manifest.version })}</li>
           </ul>
 
-          <label htmlFor="strategy">If an item already exists</label>
+          <label htmlFor="strategy">{t("import_strategy_label")}</label>
           <select
             id="strategy"
             value={strategy}
@@ -88,13 +88,13 @@ export default function ImportWizard() {
             disabled={busy}
           >
             {IMPORT_STRATEGIES.map((s) => (
-              <option key={s} value={s}>{STRATEGY_LABELS[s]}</option>
+              <option key={s} value={s}>{t(STRATEGY_KEYS[s])}</option>
             ))}
           </select>
 
           <p>
             <button type="button" onClick={onImport} disabled={busy}>
-              {busy ? "Importing…" : "Start import"}
+              {busy ? t("importing") : t("start_import")}
             </button>
           </p>
         </>
@@ -102,28 +102,26 @@ export default function ImportWizard() {
 
       {progress && (
         <p aria-live="polite">
-          {progress.phase === "images" ? "Uploading photos" : "Saving items"}:{" "}
-          {progress.completed} of {progress.total}
+          {t("importing")} {progress.completed}/{progress.total}
         </p>
       )}
 
       {result && (
         <>
-          <h2>Import complete</h2>
+          <h2>{t("import_complete")}</h2>
           <ul>
-            <li>{result.imported} items imported</li>
-            {result.skipped > 0 && <li>{result.skipped} skipped</li>}
+            <li>{t("items_imported", { "1": result.imported })}</li>
+            {result.skipped > 0 && <li>{t("items_skipped", { "1": result.skipped })}</li>}
           </ul>
           {result.errors.length > 0 && (
             <>
               <p className="error">
-                {result.errors.length} photo{result.errors.length === 1 ? "" : "s"} could not be
-                uploaded. Those items were imported without a picture.
+                {t("import_photo_errors", { "1": result.errors.length })}
               </p>
               <ul>{result.errors.map((e) => <li key={e}>{e}</li>)}</ul>
             </>
           )}
-          <p><a href="/inventory">View your inventory</a></p>
+          <p><a href="/inventory">{t("view_inventory")}</a></p>
         </>
       )}
     </div>

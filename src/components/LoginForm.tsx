@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { useT } from "@/components/I18nProvider";
 
 export default function LoginForm({ next }: { next: string }) {
+  const { t } = useT();
   const [passphrase, setPassphrase] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -26,14 +28,14 @@ export default function LoginForm({ next }: { next: string }) {
       if (res.status === 429) {
         const retry = Number(res.headers.get("Retry-After") ?? 0);
         const mins = Math.ceil(retry / 60);
-        setError(`Too many attempts. Try again in ${mins} minute${mins === 1 ? "" : "s"}.`);
+        setError(t("login_rate_limited", { "1": mins }));
       } else if (res.status === 500) {
-        setError("The server is not configured yet.");
+        setError(t("login_unconfigured"));
       } else {
-        setError("That passphrase is not right.");
+        setError(t("login_wrong"));
       }
     } catch {
-      setError("Could not reach the server. Check your connection.");
+      setError(t("login_offline"));
     } finally {
       setBusy(false);
     }
@@ -41,10 +43,10 @@ export default function LoginForm({ next }: { next: string }) {
 
   return (
     <main className="login">
-      <h1>Dust Gatherer</h1>
-      <p className="tagline">Enter your passphrase to continue.</p>
+      <h1>{t("app_name")}</h1>
+      <p className="tagline">{t("login_tagline")}</p>
       <form onSubmit={onSubmit}>
-        <label htmlFor="passphrase">Passphrase</label>
+        <label htmlFor="passphrase">{t("passphrase")}</label>
         <input
           id="passphrase"
           name="passphrase"
@@ -57,7 +59,7 @@ export default function LoginForm({ next }: { next: string }) {
         />
         {error && <p role="alert" className="error">{error}</p>}
         <button type="submit" disabled={busy || !passphrase}>
-          {busy ? "Signing in…" : "Sign in"}
+          {busy ? t("signing_in") : t("sign_in")}
         </button>
       </form>
     </main>

@@ -1,12 +1,17 @@
-import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import ItemForm from "@/components/ItemForm";
 import { requireSession } from "@/lib/auth";
+import { LANG_COOKIE, parseLang, t } from "@/lib/i18n";
 import { getItem } from "@/lib/items";
 import { listLookups } from "@/lib/lookups";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: "Edit item · Dust Gatherer" };
+
+export async function generateMetadata() {
+  const lang = parseLang((await cookies()).get(LANG_COOKIE)?.value);
+  return { title: `${t(lang, "edit_item")} · ${t(lang, "app_name")}` };
+}
 
 export default async function EditItemPage({
   params,
