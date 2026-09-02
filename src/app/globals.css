@@ -55,11 +55,22 @@ html.dark {
 
 * { box-sizing: border-box; }
 
-html, body { overflow-x: hidden; }
+html, body {
+  overflow-x: hidden;
+  background: var(--bg);
+  min-height: 100dvh;
+}
+
+/* Hint the UA chrome so Android's status-bar icons and fallback bar
+   follow the app, not the phone, when theme-color is ignored. */
+html.light { color-scheme: light; }
+html.dark { color-scheme: dark; }
+@media (prefers-color-scheme: dark) {
+  html:not(.light) { color-scheme: dark; }
+}
 
 body {
   margin: 0;
-  background: var(--bg);
   color: var(--text);
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   /* Respect notched displays once the app is installed standalone. The bottom

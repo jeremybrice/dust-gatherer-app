@@ -191,40 +191,50 @@ export function cssVars(theme: Theme): Record<string, string> {
 
 export type ThemeColorEntry = { color: string; media?: string };
 
-/** Colour for the installed-app status bar / splash chrome. Follows the
- *  page background, not accent — accent is what made the top bar stay
- *  burgundy across every palette. System mode uses the light background
- *  here; `themeColorEntries` adds the dark media query for the meta tag. */
+/** Page background for the current appearance. `prefersDark` is only
+ *  consulted when mode is "Match phone" — Android Chrome ignores
+ *  media-queried theme-color metas and then paints the status bar white. */
+export function resolvedChromeBackground(theme: Theme, prefersDark = false): string {
+  if (theme.mode === "dark") return theme.bgDark;
+  if (theme.mode === "light") return theme.bg;
+  return prefersDark ? theme.bgDark : theme.bg;
+}
+
+/** Manifest / first-paint chrome. System mode assumes light; the client
+ *  ThemeColorSync corrects it from matchMedia. */
 export function chromeBackground(theme: Theme): string {
-  return theme.mode === "dark" ? theme.bgDark : theme.bg;
+  return resolvedChromeBackground(theme, false);
 }
 
-export function themeColorEntries(theme: Theme): ThemeColorEntry[] {
-  if (theme.mode === "light") return [{ color: theme.bg }];
-  if (theme.mode === "dark") return [{ color: theme.bgDark }];
-  return [
-    { color: theme.bg, media: "(prefers-color-scheme: light)" },
-    { color: theme.bgDark, media: "(prefers-color-scheme: dark)" },
-  ];
+export function themeColorEntries(theme: Theme, prefersDark = false): ThemeColorEntry[] {
+  return [{ color: resolvedChromeBackground(theme, prefersDark) }];
 }
 
-/** Shape `generateViewport` expects: a single colour, or media-tagged
- *  colours when appearance is "Match phone". */
-export function viewportThemeColor(theme: Theme) {
-  const entries = themeColorEntries(theme);
-  if (entries.length === 1 && !entries[0].media) return entries[0].color;
-  return entries.map((e) => ({ media: e.media as string, color: e.color }));
+/** Always a single colour, never a media-query list. Android standalone
+ *  dropped every media-only tag and fell back to a white status bar. */
+export function viewportThemeColor(theme: Theme): string {
+  return chromeBackground(theme);
 }
 
 export function applyThemeColorMeta(doc: Document, theme: Theme): void {
-  for (const el of doc.querySelectorAll('meta[name="theme-color"]')) el.remove();
-  const head = doc.head ?? doc.documentElement;
-  for (const entry of themeColorEntries(theme)) {
-    const meta = doc.createElement("meta");
-    meta.setAttribute("name", "theme-color");
-    meta.setAttribute("content", entry.color);
-    if (entry.media) meta.setAttribute("media", entry.media);
-    head.appendChild(meta);
+  const prefersDark =
+    typeof doc.defaultView?.matchMedia === "function" &&
+    doc.defaultView.matchMedia("(prefers-color-scheme: dark)").matches;
+  const color = resolvedChromeBackground(theme, prefersDark);
+
+  // Removing the node unbinds Chrome's status-bar listener; it then
+  // stays white for the rest of the session. Rewrite content in place.
+  let primary = doc.querySelector('meta[name="theme-color"]:not([media])');
+  if (!primary) {
+    primary = doc.createElement("meta");
+    primary.setAttribute("name", "theme-color");
+    const head = doc.head ?? doc.documentElement;
+    head.insertBefore(primary, head.firstChild);
+  }
+  primary.setAttribute("content", color);
+
+  for (const el of doc.querySelectorAll('meta[name="theme-color"][media]')) {
+    el.remove();
   }
 }
 
