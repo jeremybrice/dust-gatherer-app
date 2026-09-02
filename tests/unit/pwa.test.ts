@@ -3,6 +3,8 @@ import { readFileSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { isPublicPath } from "@/middleware";
+import { DEFAULT_THEME } from "@/lib/theme";
+import { webManifest } from "@/lib/webManifest";
 
 const root = fileURLToPath(new URL("../..", import.meta.url));
 
@@ -11,22 +13,15 @@ function readPublic(rel: string): string {
 }
 
 describe("manifest.webmanifest", () => {
-  it("meets Chromium install criteria", () => {
-    const manifest = JSON.parse(readPublic("manifest.webmanifest")) as {
-      name: string;
-      short_name: string;
-      display: string;
-      start_url: string;
-      theme_color: string;
-      background_color: string;
-      icons: { src: string; sizes: string; type: string; purpose?: string }[];
-    };
+  it("meets Chromium install criteria and paints chrome with the page background", () => {
+    const manifest = webManifest(DEFAULT_THEME);
     expect(manifest.name).toBe("Dust Gatherer");
     expect(manifest.short_name).toBe("Dust Gatherer");
     expect(manifest.display).toBe("standalone");
     expect(manifest.start_url).toBe("/");
-    expect(manifest.theme_color).toBe("#722F37");
-    expect(manifest.background_color).toBe("#FAF7F2");
+    expect(manifest.theme_color).toBe(DEFAULT_THEME.bg);
+    expect(manifest.theme_color).not.toBe(DEFAULT_THEME.accent);
+    expect(manifest.background_color).toBe(DEFAULT_THEME.bg);
     // Two 512 icons share sizes; Object.fromEntries would keep the maskable last.
     const bySize = Object.fromEntries(
       manifest.icons.filter((i) => i.purpose !== "maskable").map((i) => [i.sizes, i]),
@@ -36,6 +31,11 @@ describe("manifest.webmanifest", () => {
     const maskable = manifest.icons.find((i) => i.purpose === "maskable");
     expect(maskable?.src).toBe("/icons/icon-512-maskable.png");
     expect(maskable?.sizes).toBe("512x512");
+  });
+
+  it("uses the dark page background when Dark is pinned", () => {
+    const theme = { ...DEFAULT_THEME, mode: "dark" as const, bgDark: "#12181C" };
+    expect(webManifest(theme).theme_color).toBe("#12181C");
   });
 
   it("has the committed icon files", () => {
@@ -56,6 +56,8 @@ describe("service worker", () => {
     expect(sw).toMatch(/addEventListener\(\s*["']fetch["']/);
     expect(sw).toMatch(/skipWaiting/);
     expect(sw).toMatch(/clients\.claim/);
+    // A precached manifest would freeze the install-time burgundy chrome.
+    expect(sw).not.toMatch(/\/manifest\.webmanifest/);
     const puts = [...sw.matchAll(/cache\.put\s*\(([^)]*)\)/g)].map((m) => m[1]);
     for (const args of puts) {
       expect(args.includes("/api/")).toBe(false);

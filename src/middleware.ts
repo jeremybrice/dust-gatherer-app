@@ -72,6 +72,9 @@ export async function middleware(req: NextRequest) {
     res.headers.set("Cache-Control", "no-cache");
     res.headers.set("Service-Worker-Allowed", "/");
   }
+  if (pathname === "/manifest.webmanifest") {
+    res.headers.set("Cache-Control", "no-cache");
+  }
   return res;
 }
 
