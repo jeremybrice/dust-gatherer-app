@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { requireSession } from "@/lib/auth";
 import { listItems } from "@/lib/items";
-import { parseFilter, parseSort } from "@/lib/inventoryStats";
+import { parseFilter, parseLimit, parseSort } from "@/lib/inventoryStats";
 import { LANG_COOKIE, parseLang, t } from "@/lib/i18n";
 import AppShell from "@/components/AppShell";
 import InventoryList from "@/components/InventoryList";
@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 export default async function InventoryPage({
   searchParams,
 }: {
-  searchParams: Promise<{ filter?: string; sort?: string; q?: string }>;
+  searchParams: Promise<{ filter?: string; sort?: string; q?: string; limit?: string }>;
 }) {
   await requireSession();
   const lang = parseLang((await cookies()).get(LANG_COOKIE)?.value);
@@ -34,6 +34,7 @@ export default async function InventoryPage({
           filter={parseFilter(sp.filter)}
           sort={parseSort(sp.sort)}
           q={sp.q ?? ""}
+          limit={parseLimit(sp.limit)}
         />
       )}
     </AppShell>

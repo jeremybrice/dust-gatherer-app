@@ -92,6 +92,11 @@ export type InventoryFilter =
 export type InventorySort = "newest" | "oldest";
 export type HomePeriod = "month" | "all";
 
+/** Rows shown before "Show more". Requested by the owner as 50 or 100. */
+export type InventoryLimit = 50 | 100 | "all";
+export const DEFAULT_LIMIT: InventoryLimit = 50;
+export const LIMIT_OPTIONS: InventoryLimit[] = [50, 100, "all"];
+
 const FILTERS: InventoryFilter[] = [
   "all", "in-stock", "scheduled", "posted", "sold", "sold-month", "unsold", "stale",
 ];
@@ -119,16 +124,24 @@ export function parsePeriod(raw: string | null | undefined): HomePeriod {
   return raw === "all" ? "all" : "month";
 }
 
+export function parseLimit(raw: string | null | undefined): InventoryLimit {
+  if (raw === "100") return 100;
+  if (raw === "all") return "all";
+  return DEFAULT_LIMIT;
+}
+
 export function inventoryHref(opts: {
   filter?: InventoryFilter;
   sort?: InventorySort;
   q?: string;
+  limit?: InventoryLimit;
 }): string {
   const p = new URLSearchParams();
   if (opts.filter && opts.filter !== "all") p.set("filter", opts.filter);
   if (opts.sort && opts.sort !== "newest") p.set("sort", opts.sort);
   const q = opts.q?.trim() ?? "";
   if (q) p.set("q", q);
+  if (opts.limit && opts.limit !== DEFAULT_LIMIT) p.set("limit", String(opts.limit));
   const s = p.toString();
   return s ? `/inventory?${s}` : "/inventory";
 }

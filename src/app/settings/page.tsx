@@ -1,9 +1,11 @@
 import { requireSession } from "@/lib/auth";
 import AppShell from "@/components/AppShell";
 import LanguageRadios from "@/components/LanguageRadios";
+import ThemeEditor from "@/components/ThemeEditor";
 import InstallPanel from "@/components/InstallPanel";
 import { cookies } from "next/headers";
 import { LANG_COOKIE, parseLang, t } from "@/lib/i18n";
+import { THEME_COOKIE, parseTheme } from "@/lib/theme";
 
 export const dynamic = "force-dynamic";
 
@@ -14,10 +16,13 @@ export async function generateMetadata() {
 
 export default async function SettingsPage() {
   await requireSession();
-  const lang = parseLang((await cookies()).get(LANG_COOKIE)?.value);
+  const jar = await cookies();
+  const lang = parseLang(jar.get(LANG_COOKIE)?.value);
+  const theme = parseTheme(jar.get(THEME_COOKIE)?.value);
   return (
     <AppShell title={t(lang, "settings")} active="settings">
       <LanguageRadios />
+      <ThemeEditor initial={theme} />
       <InstallPanel />
       <ul className="settings-links">
         <li>
