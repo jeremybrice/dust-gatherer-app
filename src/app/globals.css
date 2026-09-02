@@ -295,6 +295,44 @@ a.item-link { text-decoration: none; color: inherit; display: block; }
 
 .date-note { margin-top: 0.1rem; color: var(--accent); }
 
+/* Swipe actions (port of SwipeableItemCard). pan-y hands vertical scrolling to
+   the browser and leaves horizontal drags to the row. */
+.swipe-hint { margin: -0.25rem 0 0.75rem; font-size: 0.75rem; display: none; }
+@media (pointer: coarse) { .swipe-hint { display: block; } }
+.swipe {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+.swipe-fg {
+  position: relative;
+  transition: transform 180ms ease-out;
+  will-change: transform;
+}
+.swipe.dragging .swipe-fg { transition: none; }
+.swipe-bg {
+  position: absolute; inset: 0;
+  display: flex; align-items: stretch; justify-content: space-between;
+  border-radius: 12px;
+  transition: opacity 120ms;
+}
+.swipe.post .swipe-bg { background: color-mix(in srgb, var(--status-posted) 22%, var(--surface)); }
+.swipe.sell .swipe-bg { background: color-mix(in srgb, var(--status-sold) 22%, var(--surface)); }
+.swipe-action {
+  border: 0; background: transparent; cursor: pointer; font: inherit;
+  font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
+  width: 84px; padding: 0 0.5rem; overflow-wrap: anywhere; line-height: 1.2;
+}
+.swipe-action.post { color: var(--status-posted); margin-right: auto; }
+.swipe-action.sell { color: var(--status-sold); margin-left: auto; }
+.swipe.sell .swipe-action.post, .swipe.post .swipe-action.sell { visibility: hidden; }
+.item.pending { opacity: 0.55; }
+.row-error { margin: 0.35rem 0.25rem 0; }
+
 .paging {
   display: grid;
   gap: 0.6rem;
