@@ -34,7 +34,7 @@
    the user's in both modes. */
 @media (prefers-color-scheme: dark) {
   html:not(.light) {
-    --bg: #1A1A1A;
+    --bg: var(--user-bg-dark, #1A1A1A);
     --surface: #262626;
     --text: #F0EDE8;
     --text-muted: #A6A6A6;
@@ -44,7 +44,7 @@
   }
 }
 html.dark {
-  --bg: #1A1A1A;
+  --bg: var(--user-bg-dark, #1A1A1A);
   --surface: #262626;
   --text: #F0EDE8;
   --text-muted: #A6A6A6;

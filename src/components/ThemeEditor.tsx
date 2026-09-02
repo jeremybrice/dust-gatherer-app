@@ -16,7 +16,8 @@ import {
 
 const MAIN_COLORS: { key: ColorKey; label: string }[] = [
   { key: "accent", label: "color_accent" },
-  { key: "bg", label: "color_background" },
+  { key: "bg", label: "color_background_light" },
+  { key: "bgDark", label: "color_background_dark" },
   { key: "surface", label: "color_cards" },
   { key: "text", label: "color_text" },
 ];
@@ -44,9 +45,6 @@ export default function ThemeEditor({ initial }: { initial: Theme }) {
     setTheme(next);
     applyTheme(document.documentElement, next);
     document.cookie = themeCookieString(next, location.protocol === "https:");
-    document
-      .querySelector('meta[name="theme-color"]')
-      ?.setAttribute("content", next.accent);
   }
 
   function setColor(key: ColorKey, value: string) {

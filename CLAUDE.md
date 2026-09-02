@@ -25,9 +25,11 @@ filters, item CRUD with camera capture, settings hub, backup export, the
 database, image storage, and the import pipeline. Also: installable PWA
 (manifest, icons, service worker, Settings install instructions),
 English / Українська via Settings (cookie `dg-lang`), and a per-device colour
-theme (cookie `dg-theme`, `src/lib/theme.ts`, Settings → Colours): eight
-mix-and-match colours plus System/Light/Dark, resolved through semantic CSS
-tokens in `globals.css`. Inventory has two chip rows (status vs. views), dates
+theme (cookie `dg-theme`, `src/lib/theme.ts`, Settings → Colours): nine
+mix-and-match colours (separate light and dark backgrounds) plus
+System/Light/Dark, resolved through semantic CSS tokens in `globals.css`.
+Installed-app chrome (`theme-color` / manifest) follows the page background,
+not the accent. Inventory has two chip rows (status vs. views), dates
 on scheduled/posted rows, and a 50/100/all page size (`?limit=`).
 
 Not built yet, roughly in intended order:
