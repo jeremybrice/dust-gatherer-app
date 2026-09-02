@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import ItemForm from "@/components/ItemForm";
 import { requireSession } from "@/lib/auth";
+import { isAiConfigured } from "@/lib/describe";
 import { LANG_COOKIE, parseLang, t } from "@/lib/i18n";
 import { getItem } from "@/lib/items";
 import { listLookups } from "@/lib/lookups";
@@ -26,5 +27,12 @@ export default async function EditItemPage({
   const [item, lookups] = await Promise.all([getItem(id), listLookups()]);
   if (!item) notFound();
 
-  return <ItemForm item={item} categories={lookups.categories} sites={lookups.sites} />;
+  return (
+    <ItemForm
+      item={item}
+      categories={lookups.categories}
+      sites={lookups.sites}
+      aiEnabled={isAiConfigured()}
+    />
+  );
 }

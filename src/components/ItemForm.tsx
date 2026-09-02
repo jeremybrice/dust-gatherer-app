@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { arrayBufferToBase64 } from "@/lib/base64";
 import { useT } from "@/components/I18nProvider";
 import MarkAsSoldDialog, { parsePrice } from "@/components/MarkAsSoldDialog";
 import { localToday } from "@/lib/dates";
@@ -24,9 +25,21 @@ interface ItemFormProps {
   item: InventoryItemView | null;
   categories: string[];
   sites: string[];
+  aiEnabled: boolean;
 }
 
-export default function ItemForm({ item, categories, sites }: ItemFormProps) {
+// Long edge for the AI describe path — smaller than the upload's MAX_EDGE
+// (1600) because the vision model only needs enough detail to name style and
+// occasion, and a smaller image means fewer input tokens.
+const AI_IMAGE_MAX_EDGE = 1024;
+
+type AiErrorCode = "ai_key_rejected" | "ai_quota" | "ai_failed";
+
+function isAiErrorCode(value: unknown): value is AiErrorCode {
+  return value === "ai_key_rejected" || value === "ai_quota" || value === "ai_failed";
+}
+
+export default function ItemForm({ item, categories, sites, aiEnabled }: ItemFormProps) {
   const { lang, t } = useT();
   const router = useRouter();
   const editing = item !== null;
@@ -59,6 +72,11 @@ export default function ItemForm({ item, categories, sites }: ItemFormProps) {
   const [error, setError] = useState<string | null>(null);
   const [showSoldDialog, setShowSoldDialog] = useState(false);
 
+  // AI describe suggestion: nothing here touches the DB until Save.
+  const [aiThinking, setAiThinking] = useState(false);
+  const [aiText, setAiText] = useState<string | null>(null);
+  const [aiErrorCode, setAiErrorCode] = useState<AiErrorCode | null>(null);
+
   const soldDate = item?.soldDate ?? null;
   const isSold = soldDate !== null;
 
@@ -77,6 +95,65 @@ export default function ItemForm({ item, categories, sites }: ItemFormProps) {
     setPhotoFile(file);
     if (previewUrl) URL.revokeObjectURL(previewUrl);
     setPreviewUrl(URL.createObjectURL(file));
+  }
+
+  const hasPhoto = photoFile !== null || imageKey !== null;
+  const aiSuggestDisabled = !hasPhoto || busy || aiThinking;
+
+  // A 1024px JPEG, base64-encoded with no data-URL prefix — the server adds
+  // that. A freshly chosen file downscales directly; a saved item's photo is
+  // fetched from the blob URL first, since the server never reads Blobs for
+  // this and there is one code path either way.
+  async function photoBytes(): Promise<string> {
+    let source: Blob;
+    if (photoFile) {
+      source = photoFile;
+    } else if (imageKey) {
+      const res = await fetch(`/api/images/${imageKey}`);
+      if (!res.ok) throw new Error(`photo fetch failed (${res.status})`);
+      source = await res.blob();
+    } else {
+      throw new Error("no photo");
+    }
+    const downscaled = await downscaleImage(source, AI_IMAGE_MAX_EDGE);
+    const buf = await downscaled.arrayBuffer();
+    return arrayBufferToBase64(buf);
+  }
+
+  async function suggest() {
+    if (aiSuggestDisabled) return;
+    setAiThinking(true);
+    setAiText(null);
+    setAiErrorCode(null);
+    try {
+      const image = await photoBytes();
+      const res = await fetch("/api/describe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image, title, category, lang }),
+      });
+      if (!res.ok) {
+        const detail = await res.json().catch(() => ({}));
+        setAiErrorCode(isAiErrorCode(detail.error) ? detail.error : "ai_failed");
+        return;
+      }
+      const data = (await res.json()) as { text?: unknown };
+      setAiText(typeof data.text === "string" ? data.text : "");
+    } catch {
+      setAiErrorCode("ai_failed");
+    } finally {
+      setAiThinking(false);
+    }
+  }
+
+  function useSuggestion() {
+    if (aiText === null) return;
+    setDescription((prev) => (prev.trim() ? `${prev}\n${aiText}` : aiText));
+  }
+
+  function dismissSuggestion() {
+    setAiText(null);
+    setAiErrorCode(null);
   }
 
   function onStatusChange(next: SelectableStatus) {
@@ -227,13 +304,49 @@ export default function ItemForm({ item, categories, sites }: ItemFormProps) {
         </div>
 
         <div className="field">
-          <label htmlFor="description">{t("description")}</label>
+          <div className="label-row">
+            <label htmlFor="description">{t("description")}</label>
+            {aiEnabled && (
+              <button
+                type="button"
+                className="btn-ai"
+                onClick={suggest}
+                disabled={aiSuggestDisabled}
+              >
+                {aiThinking ? t("ai_thinking") : t("suggest_description")}
+              </button>
+            )}
+          </div>
           <textarea
             id="description"
             rows={3}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
           />
+          {aiEnabled && !hasPhoto && <p className="hint">{t("ai_needs_photo")}</p>}
+          {aiEnabled && (aiText !== null || aiErrorCode !== null) && (
+            <div className="ai-suggestion">
+              {aiErrorCode ? (
+                <p role="alert" className="error">{t(aiErrorCode)}</p>
+              ) : (
+                <p>{aiText}</p>
+              )}
+              <div className="ai-actions">
+                {aiText !== null && (
+                  <button type="button" onClick={useSuggestion}>
+                    {description.trim() ? t("ai_append") : t("ai_use")}
+                  </button>
+                )}
+                <button type="button" onClick={suggest} disabled={aiThinking}>
+                  {t("ai_retry")}
+                </button>
+                <button type="button" onClick={dismissSuggestion}>
+                  {t("ai_dismiss")}
+                </button>
+              </div>
+            </div>
+          )}
+          {aiEnabled && <p className="hint">{t("ai_privacy_hint")}</p>}
         </div>
 
         <div className="row2">

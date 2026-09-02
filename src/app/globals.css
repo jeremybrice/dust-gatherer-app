@@ -155,6 +155,31 @@ a.item-link { text-decoration: none; color: inherit; display: block; }
   border-radius: 8px; opacity: 0.9;
 }
 
+/* AI describe: label row puts the Suggest button beside the field label. */
+.label-row {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 0.5rem;
+}
+.label-row label { margin: 0; }
+.btn-ai {
+  padding: 0.3rem 0.65rem; font-size: 0.75rem; font-weight: 600;
+  background: transparent; color: var(--accent); border: 1px solid var(--border);
+  border-radius: 999px; cursor: pointer; white-space: nowrap; flex: none;
+}
+.btn-ai:disabled { opacity: 0.6; cursor: not-allowed; }
+.hint { font-size: 0.75rem; color: var(--text-muted); margin: 0; }
+.ai-suggestion {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+  padding: 0.65rem 0.75rem; display: flex; flex-direction: column; gap: 0.5rem;
+}
+.ai-suggestion p { margin: 0; font-size: 0.875rem; }
+.ai-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.ai-actions button {
+  padding: 0.35rem 0.7rem; font-size: 0.8125rem; font-weight: 600;
+  background: transparent; color: var(--accent); border: 1px solid var(--border);
+  border-radius: 999px; cursor: pointer;
+}
+.ai-actions button:disabled { opacity: 0.6; cursor: not-allowed; }
+
 .btn {
   padding: 0.75rem 1rem; font-size: 1rem; border: 0; border-radius: 8px;
   background: var(--accent); color: var(--accent-fg); cursor: pointer;

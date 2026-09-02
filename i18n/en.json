@@ -180,5 +180,16 @@
   "posting_days_hint": "Days you usually list items. The calendar rings them and Auto-schedule fills them.",
   "saved": "Saved",
   "save_failed_generic": "Could not save.",
-  "swipe_hint": "Swipe an item right to mark it posted, left to mark it sold."
+  "swipe_hint": "Swipe an item right to mark it posted, left to mark it sold.",
+  "suggest_description": "Suggest description",
+  "ai_thinking": "Thinking…",
+  "ai_use": "Use",
+  "ai_append": "Add to description",
+  "ai_retry": "Try again",
+  "ai_dismiss": "Dismiss",
+  "ai_needs_photo": "Add a photo first",
+  "ai_failed": "Could not get a suggestion.",
+  "ai_quota": "AI quota reached for now, try later",
+  "ai_key_rejected": "AI key rejected, check Settings on the server",
+  "ai_privacy_hint": "The photo is sent to Alibaba Cloud to generate this suggestion."
 }

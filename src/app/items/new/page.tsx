@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import ItemForm from "@/components/ItemForm";
 import { requireSession } from "@/lib/auth";
+import { isAiConfigured } from "@/lib/describe";
 import { LANG_COOKIE, parseLang, t } from "@/lib/i18n";
 import { listLookups } from "@/lib/lookups";
 
@@ -14,5 +15,12 @@ export async function generateMetadata() {
 export default async function NewItemPage() {
   await requireSession();
   const lookups = await listLookups();
-  return <ItemForm item={null} categories={lookups.categories} sites={lookups.sites} />;
+  return (
+    <ItemForm
+      item={null}
+      categories={lookups.categories}
+      sites={lookups.sites}
+      aiEnabled={isAiConfigured()}
+    />
+  );
 }
