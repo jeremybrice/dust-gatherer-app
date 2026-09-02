@@ -277,9 +277,32 @@ a.item-link { text-decoration: none; color: inherit; display: block; }
 .chips {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 0.4rem;
-  margin: 0 0 0.75rem;
+  margin: 0 0 0.5rem;
 }
+.chips-label {
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  min-width: 3.5rem;
+}
+/* Views cut across statuses, so they look different: dashed, accent-tinted. */
+.chips.views { margin-bottom: 0.9rem; }
+.chips.views a { border-style: dashed; color: var(--accent); }
+.chips.views a.on { border-style: solid; }
+
+.date-note { margin-top: 0.1rem; color: var(--accent); }
+
+.paging {
+  display: grid;
+  gap: 0.6rem;
+  justify-items: center;
+  margin: 1rem 0 0;
+}
+.paging .meta { margin: 0; color: var(--text-muted); font-size: 0.8125rem; }
+.paging .chips { margin: 0; }
 .chips a, .chips-inline a {
   font-size: 0.75rem;
   font-weight: 600;

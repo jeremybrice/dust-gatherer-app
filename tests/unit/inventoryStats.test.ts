@@ -5,8 +5,10 @@ import {
   FILTER_KEYS,
   STALE_AFTER_DAYS,
   filterItems,
+  DEFAULT_LIMIT,
   inventoryHref,
   parseFilter,
+  parseLimit,
   parsePeriod,
   parseSort,
   statsFor,
@@ -176,6 +178,17 @@ describe("parse helpers", () => {
     expect(parsePeriod(undefined)).toBe("month");
     expect(parsePeriod("all")).toBe("all");
   });
+
+  it("defaults the page size to 50 and accepts only 50, 100, or all", () => {
+    expect(DEFAULT_LIMIT).toBe(50);
+    expect(parseLimit(undefined)).toBe(50);
+    expect(parseLimit("")).toBe(50);
+    expect(parseLimit("25")).toBe(50);
+    expect(parseLimit("50")).toBe(50);
+    expect(parseLimit("100")).toBe(100);
+    expect(parseLimit("all")).toBe("all");
+    expect(parseLimit("ALL")).toBe(50);
+  });
 });
 
 describe("inventoryHref", () => {
@@ -187,6 +200,14 @@ describe("inventoryHref", () => {
       "/inventory?filter=unsold&sort=oldest",
     );
     expect(inventoryHref({ q: "bowl" })).toBe("/inventory?q=bowl");
+  });
+
+  it("carries a non-default page size", () => {
+    expect(inventoryHref({ limit: 50 })).toBe("/inventory");
+    expect(inventoryHref({ limit: 100 })).toBe("/inventory?limit=100");
+    expect(inventoryHref({ filter: "sold", limit: "all" })).toBe(
+      "/inventory?filter=sold&limit=all",
+    );
   });
 });
 

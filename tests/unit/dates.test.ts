@@ -1,5 +1,14 @@
 import { describe, it, expect } from "vitest";
-import { daysSitting, localToday, monthLabel, sameMonth } from "@/lib/dates";
+import { daysSitting, localToday, monthLabel, sameMonth, shortDate } from "@/lib/dates";
+
+describe("shortDate", () => {
+  it("shows day and short month without timezone drift", () => {
+    expect(shortDate("2026-09-10")).toBe("Sep 10");
+    expect(shortDate("2026-01-01")).toBe("Jan 1");
+    expect(shortDate("2026-09-10", "uk").toLowerCase()).toContain("вер");
+    expect(shortDate("2026-09-10", "uk")).toContain("10");
+  });
+});
 
 describe("localToday", () => {
   it("returns a YYYY-MM-DD string", () => {
