@@ -317,6 +317,7 @@ export default function ItemForm({ item, categories, sites, aiEnabled }: ItemFor
               </button>
             )}
           </div>
+          {aiEnabled && <p className="hint">{t("ai_privacy_hint")}</p>}
           <textarea
             id="description"
             rows={3}
@@ -346,7 +347,6 @@ export default function ItemForm({ item, categories, sites, aiEnabled }: ItemFor
               </div>
             </div>
           )}
-          {aiEnabled && <p className="hint">{t("ai_privacy_hint")}</p>}
         </div>
 
         <div className="row2">
