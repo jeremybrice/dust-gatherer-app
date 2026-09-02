@@ -201,8 +201,10 @@ export default function InventoryList({
                   <SwipeRow
                     canPost={item.status === "INVENTORY" || item.status === "SCHEDULED"}
                     canSell={item.status !== "SOLD"}
-                    postLabel={t("mark_as_posted")}
-                    sellLabel={t("mark_as_sold")}
+                    postLabel={t("status_posted")}
+                    sellLabel={t("status_sold")}
+                    postAria={t("mark_as_posted")}
+                    sellAria={t("mark_as_sold")}
                     busy={pendingId === item.id}
                     onPost={() => markPosted(item)}
                     onSell={() => { setRowError(null); setSelling(item); }}

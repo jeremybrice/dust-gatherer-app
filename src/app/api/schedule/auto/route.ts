@@ -27,10 +27,11 @@ export async function POST(req: Request) {
   }
 
   try {
-    const [items, postingDays] = await Promise.all([listItems(), getPostingDays()]);
+    const items = await listItems();
     if (items.status !== "ok") {
       return NextResponse.json({ error: "database unavailable" }, { status: 503 });
     }
+    const postingDays = await getPostingDays();
     const plan = autoSchedulePlan(unscheduledItems(items.items), parsed.data.today, postingDays);
     const scheduled = await applySchedulePlan(plan);
     return NextResponse.json({ ok: true, scheduled });

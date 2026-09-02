@@ -10,7 +10,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 // action fires on release. The parked stage exists because iOS Safari owns a
 // right swipe that begins at the screen edge (Back), so a short, deliberate
 // drag that shows a button is the gesture that never fights the browser.
-const REVEAL_PX = 84;
+const REVEAL_PX = 96;
 const TRIGGER_FRACTION = 0.4;
 const INTENT_PX = 8;
 
@@ -21,6 +21,8 @@ export default function SwipeRow({
   canSell,
   postLabel,
   sellLabel,
+  postAria,
+  sellAria,
   busy,
   onPost,
   onSell,
@@ -28,8 +30,11 @@ export default function SwipeRow({
 }: {
   canPost: boolean;
   canSell: boolean;
+  /** Short button text; the full action name goes in aria-label. */
   postLabel: string;
   sellLabel: string;
+  postAria: string;
+  sellAria: string;
   busy: boolean;
   onPost: () => void;
   onSell: () => void;
@@ -91,7 +96,12 @@ export default function SwipeRow({
       if (Math.abs(ddx) < INTENT_PX && Math.abs(ddy) < INTENT_PX) return;
       intent.current = Math.abs(ddx) > Math.abs(ddy) ? "h" : "v";
       if (intent.current === "h") {
-        root.current?.setPointerCapture(e.pointerId);
+        try {
+          root.current?.setPointerCapture(e.pointerId);
+        } catch {
+          // Capture is a nicety (keeps the drag if the finger leaves the row);
+          // a browser that refuses it should not abort the gesture.
+        }
         setDragging(true);
       }
     }
@@ -156,6 +166,7 @@ export default function SwipeRow({
           <button
             type="button"
             className="swipe-action post"
+            aria-label={postAria}
             tabIndex={open === "post" ? 0 : -1}
             onClick={() => { settle(0, null); onPost(); }}
           >
@@ -166,6 +177,7 @@ export default function SwipeRow({
           <button
             type="button"
             className="swipe-action sell"
+            aria-label={sellAria}
             tabIndex={open === "sell" ? 0 : -1}
             onClick={() => { settle(0, null); onSell(); }}
           >

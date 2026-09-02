@@ -324,8 +324,8 @@ a.item-link { text-decoration: none; color: inherit; display: block; }
 .swipe.sell .swipe-bg { background: color-mix(in srgb, var(--status-sold) 22%, var(--surface)); }
 .swipe-action {
   border: 0; background: transparent; cursor: pointer; font: inherit;
-  font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
-  width: 84px; padding: 0 0.5rem; overflow-wrap: anywhere; line-height: 1.2;
+  font-size: 0.8125rem; font-weight: 700;
+  width: 96px; padding: 0 0.4rem; line-height: 1.2;
 }
 .swipe-action.post { color: var(--status-posted); margin-right: auto; }
 .swipe-action.sell { color: var(--status-sold); margin-left: auto; }
