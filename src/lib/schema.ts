@@ -68,5 +68,16 @@ export const loginAttempts = pgTable("login_attempts", {
   index("login_attempts_last_failure_idx").on(t.lastFailureAt),
 ]);
 
+// Shop-level preferences that must be the same on every device and readable by
+// server code (the auto-scheduler runs on the server). Key/value rather than one
+// column per setting so the next preference is a row, not a migration. Today the
+// only key is `posting_days`: a JSON array of ISO weekdays, 1 = Monday .. 7 = Sunday.
+// Device preferences (language, theme) stay in cookies and never land here.
+export const appSettings = pgTable("app_settings", {
+  key: text("key").primaryKey(),
+  value: text("value").notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 export type InventoryItemRow = typeof inventoryItems.$inferSelect;
 export type NewInventoryItemRow = typeof inventoryItems.$inferInsert;
