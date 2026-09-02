@@ -27,9 +27,12 @@ Calendar/Schedule, category and site management.
 ### Storage
 
 A `dg-theme` cookie on the device, mirroring `dg-lang`: not `httpOnly`, `Path=/`,
-`Max-Age=31536000`, `SameSite=Lax`, `Secure` on HTTPS. Value is compact JSON. Read on the
-server in `layout.tsx` so the first paint already has her colours (no flash). No schema
-change; each device keeps its own theme, which is acceptable for a single user on one phone.
+`Max-Age=31536000`, `SameSite=Lax`, `Secure` on HTTPS. Value is a dot-separated string,
+`v1.<mode>.<8 hex colours without #>`, chosen over JSON because every character is a cookie
+octet (no percent-encoding to get wrong on either side) and a corrupted value still parses
+field by field. Read on the server in `layout.tsx` so the first paint already has her colours
+(no flash). No schema change; each device keeps its own theme, which is acceptable for a
+single user on one phone.
 
 ### Tokens
 

@@ -23,14 +23,20 @@ Working end to end: sign-in, command-center Home (this-month profit, shelf
 value, posted-waiting, stale, oldest/recent strips), inventory search and
 filters, item CRUD with camera capture, settings hub, backup export, the
 database, image storage, and the import pipeline. Also: installable PWA
-(manifest, icons, service worker, Settings install instructions) and
-English / Українська via Settings (cookie `dg-lang`).
+(manifest, icons, service worker, Settings install instructions),
+English / Українська via Settings (cookie `dg-lang`), and a per-device colour
+theme (cookie `dg-theme`, `src/lib/theme.ts`, Settings → Colours): eight
+mix-and-match colours plus System/Light/Dark, resolved through semantic CSS
+tokens in `globals.css`. Inventory has two chip rows (status vs. views), dates
+on scheduled/posted rows, and a 50/100/all page size (`?limit=`).
 
 Not built yet, roughly in intended order:
 
 1. Calendar / Schedule
 2. Category and site management UI
-3. Bulk select — never implemented on Android either
+3. Quick Posted/Sold actions from the list ("slides"; awaiting her clarification)
+4. AI description suggestion from the photo (style and occasion)
+5. Bulk select — never implemented on Android either
 
 Analytics must reproduce the **current** Android behaviour, which `PLAN.md` redesigned:
 `inventoryValue = totalSpent - COGS`, `salesProfit = totalRevenue - COGS`.
@@ -97,6 +103,11 @@ headers *after* middleware, so headers declared there silently win.
 
 **Keep PWA assets public in the middleware matcher.** A redirected `/sw.js` fails service
 worker registration and quietly makes the app non-installable.
+
+**Only `--user-*` variables go inline on `<html>`.** `layout.tsx` writes the theme cookie's
+colours as `--user-accent`, `--user-bg`, ...; `globals.css` resolves `--accent`, `--bg`, ... from
+them with defaults. Inline `--bg` itself would beat the dark-mode stylesheet rule and the phone's
+dark setting would stop working.
 
 **Money is `numeric(10,2)` with `mode: "number"`**; the four `LocalDate` fields are `date`, not
 `timestamptz`, or dates shift across timezone boundaries. `status` and `profit` are derived in
