@@ -4,11 +4,13 @@ import {
   DEFAULT_THEME,
   PRESETS,
   THEME_COOKIE,
+  chromeBackground,
   contrastText,
   cssVars,
   isDefaultTheme,
   parseTheme,
   serializeTheme,
+  themeColorEntries,
   themeCookieString,
 } from "@/lib/theme";
 
@@ -43,6 +45,22 @@ describe("parseTheme", () => {
     expect(theme.bg).toBe(DEFAULT_THEME.bg);
   });
 
+  it("reads an 8-colour v1 cookie and defaults the dark background", () => {
+    // Devices that set a theme before bgDark existed still have eight hex
+    // fields. Appending the ninth keeps those cookies valid.
+    const old = "v1.light.b8546c.fbf4f5.ffffff.302428.a08b90.6c9bd2.e3a93e.7fae8b";
+    const theme = parseTheme(old);
+    expect(theme.mode).toBe("light");
+    expect(theme.accent).toBe("#B8546C");
+    expect(theme.bg).toBe("#FBF4F5");
+    expect(theme.bgDark).toBe("#1A1A1A");
+  });
+
+  it("round-trips a custom dark background", () => {
+    const theme = { ...DEFAULT_THEME, mode: "dark" as const, bgDark: "#12181C" };
+    expect(parseTheme(serializeTheme(theme))).toEqual(theme);
+  });
+
   it("falls back to system on an unknown mode and to defaults on short input", () => {
     expect(parseTheme("v1.sepia.722f37").mode).toBe("system");
     expect(parseTheme("v1.light").mode).toBe("light");
@@ -74,6 +92,7 @@ describe("presets and defaults", () => {
     expect({ ...classic.colors, mode: "system" }).toEqual(DEFAULT_THEME);
     expect(DEFAULT_THEME.accent).toBe("#722F37");
     expect(DEFAULT_THEME.bg).toBe("#FAF7F2");
+    expect(DEFAULT_THEME.bgDark).toBe("#1A1A1A");
   });
 
   it("knows when the theme is untouched", () => {
@@ -103,6 +122,7 @@ describe("cssVars", () => {
       "--user-accent",
       "--user-accent-fg",
       "--user-bg",
+      "--user-bg-dark",
       "--user-status-inventory",
       "--user-status-inventory-fg",
       "--user-status-posted",
@@ -116,8 +136,31 @@ describe("cssVars", () => {
     ]);
     expect(vars["--user-accent"]).toBe("#722F37");
     expect(vars["--user-accent-fg"]).toBe("#FFFFFF");
+    expect(vars["--user-bg-dark"]).toBe("#1A1A1A");
     expect(vars["--user-status-posted-fg"]).toBe("#2D2D2D");
     expect(vars["--user-status-inventory-fg"]).toBe("#FFFFFF");
+  });
+});
+
+describe("chrome background", () => {
+  it("uses the page background, never the accent", () => {
+    const blush = PRESETS.find((p) => p.id === "blush")!;
+    const light = { ...blush.colors, mode: "light" as const };
+    const dark = { ...blush.colors, mode: "dark" as const };
+    expect(chromeBackground(light)).toBe(blush.colors.bg);
+    expect(chromeBackground(dark)).toBe(blush.colors.bgDark);
+    expect(chromeBackground(light)).not.toBe(blush.colors.accent);
+    expect(themeColorEntries(light)).toEqual([{ color: blush.colors.bg }]);
+    expect(themeColorEntries(dark)).toEqual([{ color: blush.colors.bgDark }]);
+  });
+
+  it("emits light and dark media queries in system mode", () => {
+    const theme = { ...DEFAULT_THEME, mode: "system" as const };
+    expect(chromeBackground(theme)).toBe(theme.bg);
+    expect(themeColorEntries(theme)).toEqual([
+      { color: theme.bg, media: "(prefers-color-scheme: light)" },
+      { color: theme.bgDark, media: "(prefers-color-scheme: dark)" },
+    ]);
   });
 });
 

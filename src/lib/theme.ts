@@ -8,6 +8,8 @@ const MAX_AGE_SECONDS = 31536000;
 export const THEME_MODES = ["system", "light", "dark"] as const;
 export type ThemeMode = (typeof THEME_MODES)[number];
 
+// bgDark is last so an 8-colour v1 cookie still maps the original fields
+// and the new dark background falls back per-field to the default.
 export const COLOR_KEYS = [
   "accent",
   "bg",
@@ -17,6 +19,7 @@ export const COLOR_KEYS = [
   "statusScheduled",
   "statusPosted",
   "statusSold",
+  "bgDark",
 ] as const;
 export type ColorKey = (typeof COLOR_KEYS)[number];
 export type ThemeColors = Record<ColorKey, string>;
@@ -34,6 +37,7 @@ const CLASSIC: ThemeColors = {
   statusScheduled: "#5B9BD5",
   statusPosted: "#D4A03A",
   statusSold: "#87A878",
+  bgDark: "#1A1A1A",
 };
 
 export const DEFAULT_THEME: Theme = { ...CLASSIC, mode: "system" };
@@ -47,7 +51,7 @@ export const PRESETS: { id: PresetId; colors: ThemeColors }[] = [
     colors: {
       accent: "#1F5F8B", bg: "#F2F7FA", surface: "#FFFFFF", text: "#1E2A33",
       statusInventory: "#6C8393", statusScheduled: "#3F8FC9",
-      statusPosted: "#E0A533", statusSold: "#4FA383",
+      statusPosted: "#E0A533", statusSold: "#4FA383", bgDark: "#0E161C",
     },
   },
   {
@@ -55,7 +59,7 @@ export const PRESETS: { id: PresetId; colors: ThemeColors }[] = [
     colors: {
       accent: "#2F5D3A", bg: "#F4F6F0", surface: "#FFFFFF", text: "#232B22",
       statusInventory: "#7E8A6C", statusScheduled: "#4C8DB5",
-      statusPosted: "#D8A93B", statusSold: "#5E9E6C",
+      statusPosted: "#D8A93B", statusSold: "#5E9E6C", bgDark: "#121612",
     },
   },
   {
@@ -63,7 +67,7 @@ export const PRESETS: { id: PresetId; colors: ThemeColors }[] = [
     colors: {
       accent: "#3B4A5C", bg: "#F5F6F8", surface: "#FFFFFF", text: "#1F252D",
       statusInventory: "#7A8794", statusScheduled: "#5B8DD9",
-      statusPosted: "#D9A441", statusSold: "#5FA987",
+      statusPosted: "#D9A441", statusSold: "#5FA987", bgDark: "#121418",
     },
   },
   {
@@ -71,7 +75,7 @@ export const PRESETS: { id: PresetId; colors: ThemeColors }[] = [
     colors: {
       accent: "#B8546C", bg: "#FBF4F5", surface: "#FFFFFF", text: "#302428",
       statusInventory: "#A08B90", statusScheduled: "#6C9BD2",
-      statusPosted: "#E3A93E", statusSold: "#7FAE8B",
+      statusPosted: "#E3A93E", statusSold: "#7FAE8B", bgDark: "#161213",
     },
   },
   {
@@ -79,7 +83,7 @@ export const PRESETS: { id: PresetId; colors: ThemeColors }[] = [
     colors: {
       accent: "#222222", bg: "#F7F7F7", surface: "#FFFFFF", text: "#111111",
       statusInventory: "#8A8A8A", statusScheduled: "#5A5A5A",
-      statusPosted: "#BDBDBD", statusSold: "#3D3D3D",
+      statusPosted: "#BDBDBD", statusSold: "#3D3D3D", bgDark: "#111111",
     },
   },
 ];
@@ -92,7 +96,7 @@ function normaliseHex(raw: unknown): string | null {
   return m ? `#${m[1].toUpperCase()}` : null;
 }
 
-// Cookie format: `v1.<mode>.<8 hex colours without #>` joined by dots. Every
+// Cookie format: `v1.<mode>.<9 hex colours without #>` joined by dots. Every
 // character is a cookie-octet, so the value survives Set-Cookie and document.cookie
 // without percent-encoding, and a truncated or corrupted value still parses
 // field by field. JSON would need encoding and fail as a whole on one bad byte.
@@ -167,6 +171,7 @@ const VAR_NAMES: Record<ColorKey, string> = {
   statusScheduled: "--user-status-scheduled",
   statusPosted: "--user-status-posted",
   statusSold: "--user-status-sold",
+  bgDark: "--user-bg-dark",
 };
 
 const STATUS_KEYS: ColorKey[] = [
@@ -184,6 +189,45 @@ export function cssVars(theme: Theme): Record<string, string> {
   return out;
 }
 
+export type ThemeColorEntry = { color: string; media?: string };
+
+/** Colour for the installed-app status bar / splash chrome. Follows the
+ *  page background, not accent — accent is what made the top bar stay
+ *  burgundy across every palette. System mode uses the light background
+ *  here; `themeColorEntries` adds the dark media query for the meta tag. */
+export function chromeBackground(theme: Theme): string {
+  return theme.mode === "dark" ? theme.bgDark : theme.bg;
+}
+
+export function themeColorEntries(theme: Theme): ThemeColorEntry[] {
+  if (theme.mode === "light") return [{ color: theme.bg }];
+  if (theme.mode === "dark") return [{ color: theme.bgDark }];
+  return [
+    { color: theme.bg, media: "(prefers-color-scheme: light)" },
+    { color: theme.bgDark, media: "(prefers-color-scheme: dark)" },
+  ];
+}
+
+/** Shape `generateViewport` expects: a single colour, or media-tagged
+ *  colours when appearance is "Match phone". */
+export function viewportThemeColor(theme: Theme) {
+  const entries = themeColorEntries(theme);
+  if (entries.length === 1 && !entries[0].media) return entries[0].color;
+  return entries.map((e) => ({ media: e.media as string, color: e.color }));
+}
+
+export function applyThemeColorMeta(doc: Document, theme: Theme): void {
+  for (const el of doc.querySelectorAll('meta[name="theme-color"]')) el.remove();
+  const head = doc.head ?? doc.documentElement;
+  for (const entry of themeColorEntries(theme)) {
+    const meta = doc.createElement("meta");
+    meta.setAttribute("name", "theme-color");
+    meta.setAttribute("content", entry.color);
+    if (entry.media) meta.setAttribute("media", entry.media);
+    head.appendChild(meta);
+  }
+}
+
 /** Apply a theme to a live document without a reload. */
 export function applyTheme(root: HTMLElement, theme: Theme): void {
   for (const [name, value] of Object.entries(cssVars(theme))) {
@@ -191,4 +235,6 @@ export function applyTheme(root: HTMLElement, theme: Theme): void {
   }
   root.classList.remove("light", "dark");
   if (theme.mode !== "system") root.classList.add(theme.mode);
+  const doc = root.ownerDocument;
+  if (doc) applyThemeColorMeta(doc, theme);
 }
