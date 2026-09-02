@@ -28,15 +28,19 @@ English / Українська via Settings (cookie `dg-lang`), and a per-device
 theme (cookie `dg-theme`, `src/lib/theme.ts`, Settings → Colours): eight
 mix-and-match colours plus System/Light/Dark, resolved through semantic CSS
 tokens in `globals.css`. Inventory has two chip rows (status vs. views), dates
-on scheduled/posted rows, and a 50/100/all page size (`?limit=`).
+on scheduled/posted rows, a 50/100/all page size (`?limit=`), and the Android
+swipe actions (`SwipeRow`: right = Mark as Posted, left = Mark as Sold, parks
+with a button before the 40% direct trigger). The Schedule tab (`/schedule`,
+`src/lib/schedule.ts`) ports the Android calendar: month grid, posting days
+ringed, day view with Unschedule and a picker to schedule an item onto a day,
+"N unscheduled" sheet with Auto-schedule. Posting days are configurable in
+Settings and stored in `app_settings` (key `posting_days`, default Mon/Wed/Fri).
 
 Not built yet, roughly in intended order:
 
-1. Calendar / Schedule
-2. Category and site management UI
-3. Quick Posted/Sold actions from the list ("slides"; awaiting her clarification)
-4. AI description suggestion from the photo (style and occasion)
-5. Bulk select — never implemented on Android either
+1. Category and site management UI
+2. AI description suggestion from the photo (style and occasion)
+3. Bulk select — never implemented on Android either
 
 Analytics must reproduce the **current** Android behaviour, which `PLAN.md` redesigned:
 `inventoryValue = totalSpent - COGS`, `salesProfit = totalRevenue - COGS`.
