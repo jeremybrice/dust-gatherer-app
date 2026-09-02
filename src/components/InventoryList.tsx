@@ -27,7 +27,7 @@ const CHIPS: { filter: InventoryFilter; key: string }[] = [
   { filter: "scheduled", key: "chip_scheduled" },
   { filter: "posted", key: "chip_posted" },
   { filter: "sold", key: "chip_sold" },
-  { filter: "unsold", key: "chip_unsold" },
+  { filter: "unsold", key: "on_the_shelf" },
   { filter: "stale", key: "chip_stale" },
 ];
 
