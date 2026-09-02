@@ -36,6 +36,7 @@ describe("manifest.webmanifest", () => {
   it("uses the dark page background when Dark is pinned", () => {
     const theme = { ...DEFAULT_THEME, mode: "dark" as const, bgDark: "#12181C" };
     expect(webManifest(theme).theme_color).toBe("#12181C");
+    expect(webManifest(theme).background_color).toBe("#12181C");
   });
 
   it("has the committed icon files", () => {
