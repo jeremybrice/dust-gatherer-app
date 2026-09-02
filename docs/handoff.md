@@ -37,11 +37,15 @@ ringed, day view with Unschedule and a picker to schedule an item onto a day,
 "N unscheduled" sheet with Auto-schedule. Posting days are configurable in
 Settings and stored in `app_settings` (key `posting_days`, default Mon/Wed/Fri).
 
+The item form's **Suggest description** button (`src/lib/describe.ts`, `/api/describe`)
+sends the photo to the Qwen `qwen3.8-flash` vision model on Alibaba Cloud Model Studio and
+proposes a two-sentence style-and-occasion description in the UI language; hidden whenever
+`AI_API_KEY` is unset.
+
 Not built yet, roughly in intended order:
 
 1. Category and site management UI
-2. AI description suggestion from the photo (style and occasion)
-3. Bulk select — never implemented on Android either
+2. Bulk select — never implemented on Android either
 
 Analytics must reproduce the **current** Android behaviour, which `PLAN.md` redesigned:
 `inventoryValue = totalSpent - COGS`, `salesProfit = totalRevenue - COGS`.
@@ -72,6 +76,9 @@ next to harmless commands.
 | `NETLIFY_DB_URL` | Injected by Netlify DB. Never set by hand. |
 | `DUST_GATHERER_PASSPHRASE` | The only credential. Server-only — never `NEXT_PUBLIC_`. |
 | `SESSION_SECRET` | Signs the session cookie; rotating it signs everyone out. |
+| `AI_API_KEY` | Key for the describe suggestion's vision model. Server-only — never `NEXT_PUBLIC_`. Absent hides the Suggest description button and the route answers 503. |
+| `AI_BASE_URL` | OpenAI-compatible base URL, ending in `/v1`, paired with `AI_API_KEY`. Server-only — never `NEXT_PUBLIC_`. |
+| `AI_MODEL` | Vision model id for the describe suggestion, defaults to `qwen3.8-flash`. Server-only — never `NEXT_PUBLIC_`. |
 
 ## Traps
 
@@ -117,6 +124,13 @@ worker registration and quietly makes the app non-installable.
 serving are now proven in production by the import, but any *new* Blobs work is unverifiable
 until deployed. This is the same category of gap that caused the driver outage; treat it that
 way.
+
+**`AI_API_KEY` and `AI_BASE_URL` are a matched pair, not two independent settings.** A
+Token Plan key (`sk-sp-...`) only works against the Token Plan base URL; a general
+pay-as-you-go key only works against the Dashscope Intl base URL. Swap one without the other
+and every call fails with 401. The Token Plan is on today because its terms — accepted
+2026-09-02 — exclude "custom application backends" and this route is one; the mitigation is
+that moving off it later is env-only, no code change.
 
 ## Deploying
 
