@@ -1,51 +1,76 @@
-/* Palette carried over from the Android app's ui/theme/Color.kt so the web app
-   is recognisably the same product. */
+/* Theme tokens.
+
+   Defaults are the Android app's ui/theme/Color.kt palette. The user's own
+   colours arrive as --user-* variables set inline on <html> by layout.tsx (see
+   src/lib/theme.ts); every rule below reads the semantic token, never --user-*
+   directly. The indirection matters: an inline style beats any stylesheet rule,
+   so if --bg itself were inline the dark-mode override could never win. */
 :root {
-  --burgundy: #722F37;
-  --burgundy-light: #A25B63;
-  --cream: #FAF7F2;
-  --taupe: #8B7355;
-  --taupe-light: #B8A68E;
-  --sage: #87A878;
-  --gold: #D4A03A;
-  --charcoal: #2D2D2D;
-  --light-gray: #E8E4E0;
+  --accent: var(--user-accent, #722F37);
+  --accent-fg: var(--user-accent-fg, #FFFFFF);
+  --accent-soft: color-mix(in srgb, var(--accent) 12%, var(--surface));
 
-  --status-inventory: var(--taupe);
-  --status-scheduled: #5B9BD5;
-  --status-posted: var(--gold);
-  --status-sold: var(--sage);
+  --status-inventory: var(--user-status-inventory, #8B7355);
+  --status-inventory-fg: var(--user-status-inventory-fg, #FFFFFF);
+  --status-scheduled: var(--user-status-scheduled, #5B9BD5);
+  --status-scheduled-fg: var(--user-status-scheduled-fg, #2D2D2D);
+  --status-posted: var(--user-status-posted, #D4A03A);
+  --status-posted-fg: var(--user-status-posted-fg, #2D2D2D);
+  --status-sold: var(--user-status-sold, #87A878);
+  --status-sold-fg: var(--user-status-sold-fg, #2D2D2D);
+  --positive: var(--status-sold);
 
-  --bg: var(--cream);
-  --surface: #FFFFFF;
-  --text: var(--charcoal);
-  --text-muted: #6B6B6B;
-  --border: var(--light-gray);
+  --bg: var(--user-bg, #FAF7F2);
+  --surface: var(--user-surface, #FFFFFF);
+  --text: var(--user-text, #2D2D2D);
+  --text-muted: color-mix(in srgb, var(--text) 62%, var(--bg));
+  --border: color-mix(in srgb, var(--text) 10%, var(--bg));
+  --thumb: color-mix(in srgb, var(--text) 8%, var(--bg));
+  --danger: #B3261E;
 }
 
+/* Dark neutrals. Applied when the phone is dark and the user has not pinned
+   Light, or always when the user pinned Dark. Accent and status colours are
+   the user's in both modes. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  html:not(.light) {
     --bg: #1A1A1A;
     --surface: #262626;
     --text: #F0EDE8;
     --text-muted: #A6A6A6;
     --border: #3A3A3A;
+    --thumb: #333333;
+    --danger: #F2B8B5;
   }
+}
+html.dark {
+  --bg: #1A1A1A;
+  --surface: #262626;
+  --text: #F0EDE8;
+  --text-muted: #A6A6A6;
+  --border: #3A3A3A;
+  --thumb: #333333;
+  --danger: #F2B8B5;
 }
 
 * { box-sizing: border-box; }
+
+html, body { overflow-x: hidden; }
 
 body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  /* Respect notched displays once the app is installed standalone. */
-  padding: env(safe-area-inset-top) env(safe-area-inset-right)
-           env(safe-area-inset-bottom) env(safe-area-inset-left);
+  /* Respect notched displays once the app is installed standalone. The bottom
+     inset is deliberately absent: the fixed .tabbar pads for it itself, and
+     padding here too pushed the bar under the iOS Safari toolbar. */
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left);
 }
 
-a { color: var(--burgundy); }
+img { max-width: 100%; }
+
+a { color: var(--accent); }
 
 .container { max-width: 900px; margin: 0 auto; padding: 1rem; }
 
@@ -53,11 +78,11 @@ header.app {
   display: flex; align-items: baseline; justify-content: space-between;
   gap: 1rem; margin-bottom: 1.5rem;
 }
-header.app h1 { color: var(--burgundy); font-size: 1.5rem; margin: 0; }
+header.app h1 { color: var(--accent); font-size: 1.5rem; margin: 0; }
 
 /* Login */
 .login { max-width: 22rem; margin: 4rem auto; padding: 1.5rem; }
-.login h1 { color: var(--burgundy); margin-bottom: 0.25rem; }
+.login h1 { color: var(--accent); margin-bottom: 0.25rem; }
 .login .tagline { color: var(--text-muted); margin-top: 0; }
 .login form { display: flex; flex-direction: column; gap: 0.5rem; }
 .login label { font-size: 0.875rem; color: var(--text-muted); }
@@ -67,10 +92,10 @@ header.app h1 { color: var(--burgundy); font-size: 1.5rem; margin: 0; }
 }
 .login button {
   margin-top: 0.5rem; padding: 0.75rem; font-size: 1rem; border: 0;
-  border-radius: 8px; background: var(--burgundy); color: #fff; cursor: pointer;
+  border-radius: 8px; background: var(--accent); color: var(--accent-fg); cursor: pointer;
 }
 .login button:disabled { opacity: 0.6; cursor: not-allowed; }
-.error { color: #B3261E; font-size: 0.875rem; margin: 0.25rem 0 0; }
+.error { color: var(--danger); font-size: 0.875rem; margin: 0.25rem 0 0; }
 
 /* Inventory */
 .items { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.75rem; }
@@ -80,19 +105,19 @@ header.app h1 { color: var(--burgundy); font-size: 1.5rem; margin: 0; }
 }
 .item img, .item .thumb-empty {
   width: 64px; height: 64px; border-radius: 8px; object-fit: cover; flex: none;
-  background: var(--light-gray);
+  background: var(--thumb);
 }
 .item .body { min-width: 0; flex: 1; }
-.item h2 { font-size: 1rem; margin: 0 0 0.15rem; }
-.item .meta { font-size: 0.8125rem; color: var(--text-muted); margin: 0; }
+.item h2 { font-size: 1rem; margin: 0 0 0.15rem; overflow-wrap: anywhere; }
+.item .meta { font-size: 0.8125rem; color: var(--text-muted); margin: 0; overflow-wrap: anywhere; }
 .badge {
   font-size: 0.6875rem; text-transform: uppercase; letter-spacing: 0.04em;
-  color: #fff; padding: 0.15rem 0.5rem; border-radius: 999px; white-space: nowrap;
+  padding: 0.15rem 0.5rem; border-radius: 999px; white-space: nowrap;
 }
-.badge.INVENTORY { background: var(--status-inventory); }
-.badge.SCHEDULED { background: var(--status-scheduled); }
-.badge.POSTED    { background: var(--status-posted); color: var(--charcoal); }
-.badge.SOLD      { background: var(--status-sold); }
+.badge.INVENTORY { background: var(--status-inventory); color: var(--status-inventory-fg); }
+.badge.SCHEDULED { background: var(--status-scheduled); color: var(--status-scheduled-fg); }
+.badge.POSTED    { background: var(--status-posted); color: var(--status-posted-fg); }
+.badge.SOLD      { background: var(--status-sold); color: var(--status-sold-fg); }
 
 .notice {
   padding: 1rem; border: 1px dashed var(--border); border-radius: 12px;
@@ -114,7 +139,8 @@ a.item-link { text-decoration: none; color: inherit; display: block; }
   border-radius: 8px; background: var(--surface); color: var(--text);
   font-family: inherit;
 }
-.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+.field { min-width: 0; }
+.row2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; }
 
 .photo-area {
   width: 100%; height: 200px; border: 1px dashed var(--border); border-radius: 12px;
@@ -131,11 +157,14 @@ a.item-link { text-decoration: none; color: inherit; display: block; }
 
 .btn {
   padding: 0.75rem 1rem; font-size: 1rem; border: 0; border-radius: 8px;
-  background: var(--burgundy); color: #fff; cursor: pointer;
+  background: var(--accent); color: var(--accent-fg); cursor: pointer;
 }
 .btn:disabled { opacity: 0.6; cursor: not-allowed; }
 .btn-danger {
-  background: transparent; color: #B3261E; border: 1px solid #B3261E;
+  background: transparent; color: var(--danger); border: 1px solid var(--danger);
+}
+.btn-quiet {
+  background: transparent; color: var(--accent); border: 1px solid var(--border);
 }
 
 /* Mark as Sold dialog */
@@ -151,17 +180,18 @@ a.item-link { text-decoration: none; color: inherit; display: block; }
 .modal h2 { margin: 0; font-size: 1.125rem; }
 .modal .actions { display: flex; justify-content: flex-end; gap: 0.5rem; }
 
-/* Command-center shell */
-.shelled { padding-bottom: 5.5rem; }
+/* Command-center shell. Reserve room for the fixed tab bar plus the home
+   indicator inset so the last row is never hidden behind either. */
+.shelled { padding-bottom: calc(4.5rem + env(safe-area-inset-bottom)); }
 
 .tabbar {
   position: fixed;
   left: 0; right: 0; bottom: 0;
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   background: var(--surface);
   border-top: 1px solid var(--border);
-  padding: 0.5rem 0 env(safe-area-inset-bottom);
+  padding: 0.5rem 0 max(0.5rem, env(safe-area-inset-bottom));
   z-index: 5;
 }
 .tabbar a {
@@ -171,16 +201,18 @@ a.item-link { text-decoration: none; color: inherit; display: block; }
   color: var(--text-muted);
   text-decoration: none;
   padding: 0.35rem 0;
+  overflow-wrap: anywhere;
 }
-.tabbar a.on { color: var(--burgundy); }
+.tabbar a.on { color: var(--accent); }
 
 .stats {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.5rem;
 }
 .stat {
   display: block;
+  min-width: 0;
   text-decoration: none;
   color: inherit;
   background: var(--surface);
@@ -194,11 +226,18 @@ a.item-link { text-decoration: none; color: inherit; display: block; }
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.04em;
+  overflow-wrap: anywhere;
 }
-.stat .v { font-size: 1.25rem; font-weight: 700; margin-top: 0.15rem; }
-.stat .s { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.15rem; }
-.stat.profit .v { color: var(--sage); }
-.stat.warn .v { color: var(--burgundy); }
+.stat .v {
+  /* Ukrainian money ("12 345,67 $") runs long in a half-width card. */
+  font-size: clamp(1rem, 5.5vw, 1.25rem);
+  font-weight: 700;
+  margin-top: 0.15rem;
+  overflow-wrap: anywhere;
+}
+.stat .s { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.15rem; overflow-wrap: anywhere; }
+.stat.profit .v { color: var(--positive); }
+.stat.warn .v { color: var(--accent); }
 
 .period {
   display: flex;
@@ -220,7 +259,7 @@ a.item-link { text-decoration: none; color: inherit; display: block; }
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: var(--burgundy);
+  color: var(--accent);
   margin: 0;
 }
 .strip-head a { font-size: 0.8125rem; }
@@ -229,8 +268,8 @@ a.item-link { text-decoration: none; color: inherit; display: block; }
   display: inline-block;
   font-size: 0.6875rem;
   font-weight: 700;
-  background: #f3e6e7;
-  color: var(--burgundy);
+  background: var(--accent-soft);
+  color: var(--accent);
   border-radius: 999px;
   padding: 0.1rem 0.45rem;
 }
@@ -252,9 +291,9 @@ a.item-link { text-decoration: none; color: inherit; display: block; }
   background: var(--surface);
 }
 .chips a.on {
-  color: #fff;
-  background: var(--burgundy);
-  border-color: var(--burgundy);
+  color: var(--accent-fg);
+  background: var(--accent);
+  border-color: var(--accent);
 }
 
 .search {
@@ -279,12 +318,12 @@ a.item-link { text-decoration: none; color: inherit; display: block; }
   border-radius: 12px;
   padding: 0.9rem 1rem;
 }
-.settings-links h2 { font-size: 1rem; margin: 0 0 0.15rem; color: var(--burgundy); }
+.settings-links h2 { font-size: 1rem; margin: 0 0 0.15rem; color: var(--accent); }
 .settings-links p { margin: 0; font-size: 0.8125rem; color: var(--text-muted); }
 
 .settings-block { margin: 0 0 1.25rem; }
 .settings-block h2 {
-  font-size: 1rem; margin: 0 0 0.5rem; color: var(--burgundy);
+  font-size: 1rem; margin: 0 0 0.5rem; color: var(--accent);
 }
 .radio-row {
   display: flex; align-items: center; gap: 0.6rem;

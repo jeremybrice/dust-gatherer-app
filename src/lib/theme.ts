@@ -179,6 +179,7 @@ const STATUS_KEYS: ColorKey[] = [
 export function cssVars(theme: Theme): Record<string, string> {
   const out: Record<string, string> = {};
   for (const key of COLOR_KEYS) out[VAR_NAMES[key]] = theme[key];
+  out["--user-accent-fg"] = contrastText(theme.accent);
   for (const key of STATUS_KEYS) out[`${VAR_NAMES[key]}-fg`] = contrastText(theme[key]);
   return out;
 }

@@ -97,10 +97,11 @@ describe("contrastText", () => {
 });
 
 describe("cssVars", () => {
-  it("emits one --user-* variable per colour plus a badge foreground per status", () => {
+  it("emits one --user-* variable per colour plus a foreground for accent and each status", () => {
     const vars = cssVars(DEFAULT_THEME);
     expect(Object.keys(vars).sort()).toEqual([
       "--user-accent",
+      "--user-accent-fg",
       "--user-bg",
       "--user-status-inventory",
       "--user-status-inventory-fg",
@@ -114,6 +115,7 @@ describe("cssVars", () => {
       "--user-text",
     ]);
     expect(vars["--user-accent"]).toBe("#722F37");
+    expect(vars["--user-accent-fg"]).toBe("#FFFFFF");
     expect(vars["--user-status-posted-fg"]).toBe("#2D2D2D");
     expect(vars["--user-status-inventory-fg"]).toBe("#FFFFFF");
   });
