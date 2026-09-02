@@ -1,5 +1,19 @@
 import { describe, it, expect } from "vitest";
-import { daysSitting, localToday, monthLabel, sameMonth, shortDate } from "@/lib/dates";
+import {
+  daysSitting, localToday, longDate, monthLabel, monthYearLabel, sameMonth, shortDate, weekdayShort,
+} from "@/lib/dates";
+
+describe("calendar labels", () => {
+  it("names weekdays from ISO numbers, the month with its year, and a full day", () => {
+    expect(weekdayShort(1)).toBe("Mon");
+    expect(weekdayShort(7)).toBe("Sun");
+    expect(weekdayShort(1, "uk").toLowerCase()).toContain("пн");
+    expect(monthYearLabel("2026-09")).toBe("September 2026");
+    expect(monthYearLabel("2026-09", "uk")).toContain("2026");
+    expect(longDate("2026-09-02")).toBe("Wednesday, September 2");
+    expect(longDate("2026-09-02", "uk")).toContain("2");
+  });
+});
 
 describe("shortDate", () => {
   it("shows day and short month without timezone drift", () => {

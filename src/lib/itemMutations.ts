@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import { z } from "zod";
 import { getDb } from "@/lib/db";
 import { inventoryItems } from "@/lib/schema";
@@ -43,9 +43,17 @@ export const markSoldSchema = z.object({
   soldDate: isoDate,
 });
 
+// The swipe-right action from the list. Device date, same reasoning as soldDate.
+export const markPostedSchema = z.object({ postedDate: isoDate });
+
+// Calendar scheduling: a date, or null to unschedule.
+export const scheduleSchema = z.object({ scheduledPostDate: isoDate.nullable() });
+
 export type CreateItemPayload = z.infer<typeof createItemSchema>;
 export type UpdateItemPayload = z.infer<typeof updateItemSchema>;
 export type MarkSoldPayload = z.infer<typeof markSoldSchema>;
+export type MarkPostedPayload = z.infer<typeof markPostedSchema>;
+export type SchedulePayload = z.infer<typeof scheduleSchema>;
 
 // Every function takes an optional injectable db so the PGlite integration
 // tests drive this exact module, same pattern as importItems.ts.
@@ -105,6 +113,90 @@ export async function markItemSold(
     .where(eq(inventoryItems.id, id))
     .returning({ id: inventoryItems.id });
   return rows.length > 0 ? "updated" : "not-found";
+}
+
+export type StatusOutcome = "updated" | "not-found" | "conflict";
+
+/**
+ * Port of InventoryViewModel.markAsPosted: sets postedDate and leaves the
+ * scheduled date alone (the item was scheduled, then posted; both are facts).
+ * Refuses a sold item: SOLD outranks POSTED in deriveStatus, so the write would
+ * be invisible in the UI while silently corrupting the history.
+ */
+export async function markItemPosted(
+  id: number,
+  payload: MarkPostedPayload,
+  database?: ImportDb,
+): Promise<StatusOutcome> {
+  const db = database ?? (getDb() as ImportDb);
+  const rows = await db
+    .update(inventoryItems)
+    .set({ postedDate: payload.postedDate, updatedAt: new Date() })
+    .where(and(eq(inventoryItems.id, id), isNull(inventoryItems.soldDate)))
+    .returning({ id: inventoryItems.id });
+  if (rows.length > 0) return "updated";
+  return (await exists(db, id)) ? "conflict" : "not-found";
+}
+
+/** Set or clear the scheduled post date from the calendar. Sold items are
+ *  refused for the same reason as markItemPosted. */
+export async function scheduleItem(
+  id: number,
+  payload: SchedulePayload,
+  database?: ImportDb,
+): Promise<StatusOutcome> {
+  const db = database ?? (getDb() as ImportDb);
+  const rows = await db
+    .update(inventoryItems)
+    .set({ scheduledPostDate: payload.scheduledPostDate, updatedAt: new Date() })
+    .where(and(eq(inventoryItems.id, id), isNull(inventoryItems.soldDate)))
+    .returning({ id: inventoryItems.id });
+  if (rows.length > 0) return "updated";
+  return (await exists(db, id)) ? "conflict" : "not-found";
+}
+
+export interface ScheduleAssignment {
+  id: number;
+  date: string;
+}
+
+/**
+ * Auto-schedule: apply every assignment or none. Only rows that are STILL
+ * unscheduled and unsold are touched, so a plan computed a moment ago cannot
+ * overwrite a date she set by hand in between. Returns how many rows changed.
+ */
+export async function applySchedulePlan(
+  plan: ScheduleAssignment[],
+  database?: ImportDb,
+): Promise<number> {
+  const db = database ?? (getDb() as ImportDb);
+  if (plan.length === 0) return 0;
+  return db.transaction(async (tx) => {
+    let changed = 0;
+    for (const { id, date } of plan) {
+      const rows = await tx
+        .update(inventoryItems)
+        .set({ scheduledPostDate: date, updatedAt: new Date() })
+        .where(
+          and(
+            eq(inventoryItems.id, id),
+            isNull(inventoryItems.scheduledPostDate),
+            isNull(inventoryItems.soldDate),
+          ),
+        )
+        .returning({ id: inventoryItems.id });
+      changed += rows.length;
+    }
+    return changed;
+  });
+}
+
+async function exists(db: ImportDb, id: number): Promise<boolean> {
+  const rows = await db
+    .select({ id: inventoryItems.id })
+    .from(inventoryItems)
+    .where(eq(inventoryItems.id, id));
+  return rows.length > 0;
 }
 
 export type DeleteOutcome =

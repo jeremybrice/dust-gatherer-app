@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useT } from "@/components/I18nProvider";
+import MarkAsSoldDialog from "@/components/MarkAsSoldDialog";
+import SwipeRow from "@/components/SwipeRow";
 import { localToday, shortDate } from "@/lib/dates";
 import {
   DEFAULT_LIMIT,
@@ -57,6 +59,9 @@ export default function InventoryList({
   const router = useRouter();
   const [text, setText] = useState(q);
   const [extra, setExtra] = useState(0);
+  const [pendingId, setPendingId] = useState<number | null>(null);
+  const [rowError, setRowError] = useState<{ id: number; message: string } | null>(null);
+  const [selling, setSelling] = useState<InventoryItemView | null>(null);
   const visible = filterItems(items, { filter, sort, q, today: localToday() });
   const pageSize = limit === "all" ? visible.length : limit;
   const shown = limit === "all" ? visible : visible.slice(0, pageSize + extra);
@@ -64,6 +69,55 @@ export default function InventoryList({
 
   function commitSearch(next: string) {
     router.push(inventoryHref({ filter, sort, q: next, limit }));
+  }
+
+  // Swipe right: port of InventoryViewModel.markAsPosted, today's device date.
+  async function markPosted(item: InventoryItemView) {
+    setPendingId(item.id);
+    setRowError(null);
+    try {
+      const res = await fetch(`/api/items/${item.id}/posted`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ postedDate: localToday() }),
+      });
+      if (!res.ok) {
+        const detail = await res.json().catch(() => ({}));
+        throw new Error(detail.error ?? `${t("posted_failed")} (${res.status})`);
+      }
+      router.refresh();
+    } catch (err) {
+      setRowError({ id: item.id, message: err instanceof Error ? err.message : t("posted_failed") });
+    } finally {
+      setPendingId(null);
+    }
+  }
+
+  // Swipe left: the same dialog and endpoint the item page uses.
+  async function confirmSold(price: number) {
+    if (!selling) return;
+    const item = selling;
+    setPendingId(item.id);
+    setRowError(null);
+    try {
+      const res = await fetch(`/api/items/${item.id}/sold`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sellingPrice: price, soldDate: localToday() }),
+      });
+      if (!res.ok) {
+        const detail = await res.json().catch(() => ({}));
+        throw new Error(detail.error ?? `${t("sale_failed")} (${res.status})`);
+      }
+      setSelling(null);
+      router.refresh();
+    } catch (err) {
+      // Keep the dialog open so the typed price survives and the error is
+      // visible where she is looking.
+      setRowError({ id: item.id, message: err instanceof Error ? err.message : t("sale_failed") });
+    } finally {
+      setPendingId(null);
+    }
   }
 
   function chipRow(
@@ -125,6 +179,8 @@ export default function InventoryList({
       {chipRow(STATUS_CHIPS, "chip_group_status", "chips")}
       {chipRow(VIEW_CHIPS, "chip_group_views", "chips views")}
 
+      {items.length > 0 && <p className="meta swipe-hint">{t("swipe_hint")}</p>}
+
       <h2 style={{ fontSize: "1rem", margin: "0 0 0.75rem" }}>
         {t(FILTER_KEYS[filter])} · {visible.length}
       </h2>
@@ -142,30 +198,59 @@ export default function InventoryList({
               const note = dateNote(item);
               return (
                 <li key={item.id}>
-                  <a className="item-link" href={`/items/${item.id}`}>
-                    <div className="item">
-                      {item.imageKey ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={`/api/images/${item.imageKey}`} alt="" loading="lazy" />
-                      ) : (
-                        <div className="thumb-empty" />
-                      )}
-                      <div className="body">
-                        <h2>{item.title}</h2>
-                        <p className="meta">
-                          {t("paid", { "1": formatMoney(item.purchasePrice, lang) })}
-                          {item.profit !== null && <> · {t("profit", { "1": formatMoney(item.profit, lang) })}</>}
-                          {item.category && <> · {item.category}</>}
-                        </p>
-                        {note && <p className="meta date-note">{note}</p>}
+                  <SwipeRow
+                    canPost={item.status === "INVENTORY" || item.status === "SCHEDULED"}
+                    canSell={item.status !== "SOLD"}
+                    postLabel={t("status_posted")}
+                    sellLabel={t("status_sold")}
+                    postAria={t("mark_as_posted")}
+                    sellAria={t("mark_as_sold")}
+                    busy={pendingId === item.id}
+                    onPost={() => markPosted(item)}
+                    onSell={() => { setRowError(null); setSelling(item); }}
+                  >
+                    <a className="item-link" href={`/items/${item.id}`} draggable={false}>
+                      <div className={`item${pendingId === item.id ? " pending" : ""}`}>
+                        {item.imageKey ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={`/api/images/${item.imageKey}`} alt="" loading="lazy" draggable={false} />
+                        ) : (
+                          <div className="thumb-empty" />
+                        )}
+                        <div className="body">
+                          <h2>{item.title}</h2>
+                          <p className="meta">
+                            {t("paid", { "1": formatMoney(item.purchasePrice, lang) })}
+                            {item.profit !== null && <> · {t("profit", { "1": formatMoney(item.profit, lang) })}</>}
+                            {item.category && <> · {item.category}</>}
+                          </p>
+                          {note && <p className="meta date-note">{note}</p>}
+                        </div>
+                        <span className={`badge ${item.status}`}>{t(STATUS_KEYS[item.status])}</span>
                       </div>
-                      <span className={`badge ${item.status}`}>{t(STATUS_KEYS[item.status])}</span>
-                    </div>
-                  </a>
+                    </a>
+                  </SwipeRow>
+                  {rowError?.id === item.id && !selling && (
+                    <p role="alert" className="error row-error">{rowError.message}</p>
+                  )}
                 </li>
               );
             })}
           </ul>
+
+          {selling && (
+            <MarkAsSoldDialog
+              title={selling.title}
+              purchasePrice={selling.purchasePrice}
+              initialPrice={selling.sellingPrice != null ? String(selling.sellingPrice) : ""}
+              busy={pendingId === selling.id}
+              error={rowError?.id === selling.id ? rowError.message : null}
+              lang={lang}
+              t={t}
+              onCancel={() => { setSelling(null); setRowError(null); }}
+              onConfirm={confirmSold}
+            />
+          )}
 
           <div className="paging">
             <p className="meta">

@@ -8,7 +8,7 @@ describe("generated migration", () => {
       `select table_name from information_schema.tables where table_schema='public' order by 1`,
     );
     expect(tables.rows.map((r) => r.table_name)).toEqual([
-      "categories", "inventory_items", "login_attempts", "sites",
+      "app_settings", "categories", "inventory_items", "login_attempts", "sites",
     ]);
 
     const indexes = await db.query<{ indexname: string }>(

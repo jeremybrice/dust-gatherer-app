@@ -188,7 +188,7 @@ a.item-link { text-decoration: none; color: inherit; display: block; }
   position: fixed;
   left: 0; right: 0; bottom: 0;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   background: var(--surface);
   border-top: 1px solid var(--border);
   padding: 0.5rem 0 max(0.5rem, env(safe-area-inset-bottom));
@@ -295,6 +295,120 @@ a.item-link { text-decoration: none; color: inherit; display: block; }
 
 .date-note { margin-top: 0.1rem; color: var(--accent); }
 
+/* Swipe actions (port of SwipeableItemCard). pan-y hands vertical scrolling to
+   the browser and leaves horizontal drags to the row. */
+.swipe-hint { margin: -0.25rem 0 0.75rem; font-size: 0.75rem; display: none; }
+@media (pointer: coarse) { .swipe-hint { display: block; } }
+.swipe {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+.swipe-fg {
+  position: relative;
+  transition: transform 180ms ease-out;
+  will-change: transform;
+}
+.swipe.dragging .swipe-fg { transition: none; }
+.swipe-bg {
+  position: absolute; inset: 0;
+  display: flex; align-items: stretch; justify-content: space-between;
+  border-radius: 12px;
+  transition: opacity 120ms;
+}
+.swipe.post .swipe-bg { background: color-mix(in srgb, var(--status-posted) 22%, var(--surface)); }
+.swipe.sell .swipe-bg { background: color-mix(in srgb, var(--status-sold) 22%, var(--surface)); }
+.swipe-action {
+  border: 0; background: transparent; cursor: pointer; font: inherit;
+  font-size: 0.8125rem; font-weight: 700;
+  width: 96px; padding: 0 0.4rem; line-height: 1.2;
+}
+.swipe-action.post { color: var(--status-posted); margin-right: auto; }
+.swipe-action.sell { color: var(--status-sold); margin-left: auto; }
+.swipe.sell .swipe-action.post, .swipe.post .swipe-action.sell { visibility: hidden; }
+.item.pending { opacity: 0.55; }
+.row-error { margin: 0.35rem 0.25rem 0; }
+
+/* Schedule (port of CalendarScreen) */
+.cal-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 0.25rem;
+}
+.cal-head strong { font-size: 1.125rem; text-transform: capitalize; }
+.cal-nav {
+  display: grid; place-items: center; width: 2.5rem; height: 2.5rem;
+  border-radius: 50%; font-size: 1.5rem; text-decoration: none; line-height: 1;
+}
+.cal-nav:active { background: var(--accent-soft); }
+.cal-sub {
+  display: flex; align-items: center; justify-content: space-between;
+  min-height: 2rem; margin-bottom: 0.5rem; font-size: 0.8125rem;
+}
+.chip-btn, .link-btn {
+  border: 0; background: var(--accent-soft); color: var(--accent); font: inherit;
+  font-size: 0.75rem; font-weight: 700; border-radius: 999px; padding: 0.3rem 0.7rem;
+  cursor: pointer;
+}
+.link-btn { background: transparent; padding: 0.3rem 0; }
+
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 2px;
+  margin-bottom: 0.75rem;
+}
+.cal-wd {
+  text-align: center; font-size: 0.6875rem; text-transform: uppercase;
+  letter-spacing: 0.04em; color: var(--text-muted); padding: 0.25rem 0;
+}
+.cal-wd.posting { color: var(--status-scheduled); font-weight: 700; }
+.cal-day {
+  position: relative; aspect-ratio: 1; display: grid; place-items: center;
+  border-radius: 50%; text-decoration: none; color: var(--text); font-size: 0.9375rem;
+  border: 1px solid transparent;
+}
+.cal-day.posting { border-color: color-mix(in srgb, var(--status-scheduled) 55%, transparent); }
+.cal-day.today { background: var(--accent-soft); color: var(--accent); font-weight: 700; }
+.cal-day.selected { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
+.cal-dot {
+  position: absolute; bottom: 14%; left: 50%; transform: translateX(-50%);
+  width: 6px; height: 6px; border-radius: 50%; background: var(--status-scheduled);
+}
+.cal-day.selected .cal-dot { background: var(--accent-fg); }
+.cal-notice { margin-bottom: 0.75rem; }
+
+.posting-strip {
+  display: flex; gap: 0.5rem; overflow-x: auto; padding-bottom: 0.25rem;
+  scroll-snap-type: x proximity;
+}
+.posting-day {
+  flex: none; min-width: 5.5rem; text-decoration: none; color: inherit;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+  padding: 0.6rem 0.75rem; display: grid; gap: 0.1rem; text-align: center;
+  scroll-snap-align: start;
+}
+.posting-day .k { font-size: 0.6875rem; text-transform: uppercase; color: var(--text-muted); }
+.posting-day .v { font-weight: 700; }
+.posting-day .s { font-size: 0.75rem; color: var(--text-muted); }
+.posting-day .s.has { color: var(--status-scheduled); font-weight: 600; }
+
+.cal-day-view .items { margin-bottom: 0.75rem; }
+.cal-day-view .item h2 a { color: inherit; text-decoration: none; }
+.cal-schedule-here { width: 100%; }
+.btn.small { padding: 0.35rem 0.6rem; font-size: 0.75rem; margin-top: 0.35rem; }
+
+.modal.sheet { max-height: 85vh; }
+.sheet-list { overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.item-link.pick {
+  width: 100%; text-align: left; border: 0; background: none; padding: 0;
+  font: inherit; color: inherit; cursor: pointer;
+}
+.item-link.pick:disabled { opacity: 0.6; }
+
 .paging {
   display: grid;
   gap: 0.6rem;
@@ -359,7 +473,17 @@ a.item-link { text-decoration: none; color: inherit; display: block; }
   font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em;
   color: var(--text-muted); margin: 1rem 0 0.4rem;
 }
-.theme-editor .hint { margin: 0; font-size: 0.8125rem; color: var(--text-muted); }
+.settings-block .hint { margin: 0 0 0.5rem; font-size: 0.8125rem; color: var(--text-muted); }
+
+.day-toggles { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 0.35rem; }
+.day-toggle {
+  font: inherit; font-size: 0.75rem; font-weight: 600; padding: 0.55rem 0;
+  border-radius: 10px; border: 1px solid var(--border); background: var(--surface);
+  color: var(--text-muted); cursor: pointer; text-transform: capitalize;
+}
+.day-toggle.on { background: var(--status-scheduled); color: var(--status-scheduled-fg); border-color: var(--status-scheduled); }
+.day-toggle:disabled { opacity: 0.6; }
+.saved-note { margin: 0.4rem 0 0; font-size: 0.75rem; }
 .mode-row { display: flex; flex-wrap: wrap; gap: 0 1.25rem; }
 .mode-row .radio-row { padding: 0.35rem 0; }
 

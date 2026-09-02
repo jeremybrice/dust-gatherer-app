@@ -10,7 +10,7 @@ export default function AppShell({
   children,
 }: {
   title: string;
-  active: "home" | "inventory" | "settings";
+  active: "home" | "inventory" | "schedule" | "settings";
   addHref?: string;
   children: ReactNode;
 }) {
@@ -29,6 +29,7 @@ export default function AppShell({
       <nav className="tabbar" aria-label={t("primary_nav")}>
         <a href="/" className={active === "home" ? "on" : undefined}>{t("home")}</a>
         <a href="/inventory" className={active === "inventory" ? "on" : undefined}>{t("inventory")}</a>
+        <a href="/schedule" className={active === "schedule" ? "on" : undefined}>{t("schedule")}</a>
         <a href="/settings" className={active === "settings" ? "on" : undefined}>{t("settings")}</a>
       </nav>
     </div>

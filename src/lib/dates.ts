@@ -35,6 +35,36 @@ export function shortDate(ymd: string, lang: Lang = "en"): string {
   });
 }
 
+/** "Wednesday, September 2" / "середа, 2 вересня" for the selected calendar day. */
+export function longDate(ymd: string, lang: Lang = "en"): string {
+  const [y, m, d] = ymd.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString(localeFor(lang), {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    timeZone: "UTC",
+  });
+}
+
+/** "September 2026" / "вересень 2026" for the calendar header. */
+export function monthYearLabel(yyyyMM: string, lang: Lang = "en"): string {
+  const [y, m] = yyyyMM.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, 1)).toLocaleDateString(localeFor(lang), {
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+}
+
+/** Short weekday name for an ISO weekday (1 = Monday .. 7 = Sunday). */
+export function weekdayShort(isoWeekday: number, lang: Lang = "en"): string {
+  // 2024-01-01 was a Monday; offset from there so the day-of-week is exact.
+  return new Date(Date.UTC(2024, 0, isoWeekday)).toLocaleDateString(localeFor(lang), {
+    weekday: "short",
+    timeZone: "UTC",
+  });
+}
+
 export function monthLabel(today: string, lang: Lang = "en"): string {
   const [y, m] = today.split("-").map(Number);
   return new Date(Date.UTC(y, m - 1, 1)).toLocaleString(localeFor(lang), {
