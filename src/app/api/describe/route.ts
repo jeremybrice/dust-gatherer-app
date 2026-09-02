@@ -49,59 +49,65 @@ export async function POST(req: Request) {
   const url = `${baseUrl.replace(/\/+$/, "")}/chat/completions`;
 
   const controller = new AbortController();
+  // 20s covers connect, headers, AND the body read below — the timer is not
+  // cleared until the body is fully consumed. Netlify's synchronous function
+  // cap is 60s, so this can still fire well inside that budget.
   const timer = setTimeout(() => controller.abort(), 20_000);
 
-  let response: Response;
   try {
-    response = await fetch(url, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(
-        buildDescribeRequest(
-          {
-            imageBase64: parsed.data.image,
-            title: parsed.data.title,
-            category: parsed.data.category,
-            lang: parsed.data.lang,
-          },
-          { model },
+    let response: Response;
+    try {
+      response = await fetch(url, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(
+          buildDescribeRequest(
+            {
+              imageBase64: parsed.data.image,
+              title: parsed.data.title,
+              category: parsed.data.category,
+              lang: parsed.data.lang,
+            },
+            { model },
+          ),
         ),
-      ),
-      signal: controller.signal,
-    });
-  } catch {
-    // Abort and network failures must not leak a stack, URL, or provider body.
-    return aiClientError("ai_failed");
+        signal: controller.signal,
+      });
+    } catch {
+      // Abort and network failures must not leak a stack, URL, or provider body.
+      return aiClientError("ai_failed");
+    }
+
+    if (!response.ok) {
+      const raw = await response.text().catch(() => "");
+      console.error("describe provider", response.status, raw.slice(0, 400));
+      return aiClientError(mapAiError(response.status));
+    }
+
+    let content: unknown;
+    try {
+      const payload = (await response.json()) as {
+        choices?: Array<{ message?: { content?: unknown } }>;
+      };
+      content = payload.choices?.[0]?.message?.content;
+    } catch {
+      // Covers a body-read abort too — the provider text must not leak.
+      return aiClientError("ai_failed");
+    }
+
+    if (typeof content !== "string") {
+      return aiClientError("ai_failed");
+    }
+
+    try {
+      return NextResponse.json(parseDescribeResponse(content));
+    } catch {
+      return aiClientError("ai_failed");
+    }
   } finally {
     clearTimeout(timer);
-  }
-
-  if (!response.ok) {
-    const raw = await response.text().catch(() => "");
-    console.error("describe provider", response.status, raw.slice(0, 400));
-    return aiClientError(mapAiError(response.status));
-  }
-
-  let content: unknown;
-  try {
-    const payload = (await response.json()) as {
-      choices?: Array<{ message?: { content?: unknown } }>;
-    };
-    content = payload.choices?.[0]?.message?.content;
-  } catch {
-    return aiClientError("ai_failed");
-  }
-
-  if (typeof content !== "string") {
-    return aiClientError("ai_failed");
-  }
-
-  try {
-    return NextResponse.json(parseDescribeResponse(content));
-  } catch {
-    return aiClientError("ai_failed");
   }
 }

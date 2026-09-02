@@ -149,6 +149,7 @@ export default function ItemForm({ item, categories, sites, aiEnabled }: ItemFor
   function useSuggestion() {
     if (aiText === null) return;
     setDescription((prev) => (prev.trim() ? `${prev}\n${aiText}` : aiText));
+    dismissSuggestion();
   }
 
   function dismissSuggestion() {
@@ -338,7 +339,7 @@ export default function ItemForm({ item, categories, sites, aiEnabled }: ItemFor
                     {description.trim() ? t("ai_append") : t("ai_use")}
                   </button>
                 )}
-                <button type="button" onClick={suggest} disabled={aiThinking}>
+                <button type="button" onClick={suggest} disabled={aiThinking || busy}>
                   {t("ai_retry")}
                 </button>
                 <button type="button" onClick={dismissSuggestion}>

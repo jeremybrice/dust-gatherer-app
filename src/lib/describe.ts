@@ -129,6 +129,12 @@ export function parseDescribeResponse(content: string): DescribeResult {
         text: `${parsed.style} ${parsed.occasion}`,
       };
     }
+    // A candidate that looks like the start of our JSON object but failed to
+    // parse (or parse into {style, occasion}) is a truncated response, not
+    // prose — surfacing it as text would leak a raw JSON fragment to the seller.
+    if (candidate.startsWith("{")) {
+      throw new Error("truncated describe response");
+    }
   }
 
   // Prose fallback: keep the raw text, no structured fields.

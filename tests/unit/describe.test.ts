@@ -110,6 +110,10 @@ describe("parseDescribeResponse", () => {
     expect(() => parseDescribeResponse("")).toThrow();
     expect(() => parseDescribeResponse("   ")).toThrow();
   });
+
+  it("throws on truncated JSON instead of leaking it as prose", () => {
+    expect(() => parseDescribeResponse('{"style": "Вінтажна')).toThrow();
+  });
 });
 
 describe("mapAiError", () => {
