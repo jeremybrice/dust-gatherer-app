@@ -9,6 +9,7 @@ import {
   cssVars,
   isDefaultTheme,
   parseTheme,
+  resolvedChromeBackground,
   serializeTheme,
   themeColorEntries,
   themeCookieString,
@@ -154,13 +155,16 @@ describe("chrome background", () => {
     expect(themeColorEntries(dark)).toEqual([{ color: blush.colors.bgDark }]);
   });
 
-  it("emits light and dark media queries in system mode", () => {
+  it("always includes a no-media colour Android Chrome can bind to", () => {
     const theme = { ...DEFAULT_THEME, mode: "system" as const };
     expect(chromeBackground(theme)).toBe(theme.bg);
-    expect(themeColorEntries(theme)).toEqual([
-      { color: theme.bg, media: "(prefers-color-scheme: light)" },
-      { color: theme.bgDark, media: "(prefers-color-scheme: dark)" },
-    ]);
+    // Media-only metas are ignored on Android standalone, which left a white bar.
+    expect(themeColorEntries(theme)[0]).toEqual({ color: theme.bg });
+    expect(themeColorEntries(theme, true)[0]).toEqual({ color: theme.bgDark });
+    expect(resolvedChromeBackground(theme, false)).toBe(theme.bg);
+    expect(resolvedChromeBackground(theme, true)).toBe(theme.bgDark);
+    expect(resolvedChromeBackground({ ...theme, mode: "light" }, true)).toBe(theme.bg);
+    expect(resolvedChromeBackground({ ...theme, mode: "dark" }, false)).toBe(theme.bgDark);
   });
 });
 

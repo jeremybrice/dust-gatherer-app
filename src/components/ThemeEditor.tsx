@@ -43,8 +43,10 @@ export default function ThemeEditor({ initial }: { initial: Theme }) {
   // variable, so the whole app restyles under her finger.
   function update(next: Theme) {
     setTheme(next);
-    applyTheme(document.documentElement, next);
+    // Cookie first so ThemeColorSync, if it re-runs, reads the new value
+    // instead of painting the stale server theme back onto the status bar.
     document.cookie = themeCookieString(next, location.protocol === "https:");
+    applyTheme(document.documentElement, next);
   }
 
   function setColor(key: ColorKey, value: string) {
